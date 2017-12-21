@@ -1,9 +1,13 @@
 //*****************************************************************************
 //
-// Ejercicio FreeRTOS
+// Base: Ejercicio FreeRTOS
 //
 // Ignacio Herrero, Jose Manuel Cano, Eva Gonzalez.
 // 
+//
+// Ejercicio de microbótica
+//
+// Autores: Daniel Moreno, Elena Gómez Feito
 //
 //*****************************************************************************
 

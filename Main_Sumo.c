@@ -22,11 +22,9 @@
 #include "driverlib/pin_map.h"
 #include "driverlib/rom.h"
 #include "driverlib/sysctl.h"
-#include "driverlib/uart.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/adc.h"
 #include "driverlib/timer.h"
-#include "utils/uartstdio.h"
 #include "drivers/buttons.h"
 #include "drivers/rgb.h"
 #include "FreeRTOS.h"
@@ -34,6 +32,9 @@
 #include "queue.h"
 #include "semphr.h"
 #include "utils/cpu_usage.h"
+#include "PID.h"
+#include "distancia.h"
+#include "planificador.h"
 
 #define LED1TASKPRIO 1
 #define LED2TASKPRIO 1
@@ -103,36 +104,9 @@ void vApplicationIdleHook (void )
 //
 //*****************************************************************************
 
-static portTASK_FUNCTION(LEDTask,pvParameters)
-{
-
-    int32_t i32Estado_led=0;
-
-    //
-    // Bucle infinito, las tareas en FreeRTOS no pueden "acabar", deben "matarse" con la funcion xTaskDelete().
-    //
-    while(1)
-    {
-    	i32Estado_led=!i32Estado_led;
-
-        if (i32Estado_led)
-        {
-        	GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1 , GPIO_PIN_1);
-        	vTaskDelay(0.1*configTICK_RATE_HZ);        //Espera del RTOS (eficiente, no gasta CPU)
-        	        								 //Esta espera es de unos 100ms aproximadamente.
-        }
-        else
-        {
-        	GPIOPinWrite(GPIO_PORTF_BASE,  GPIO_PIN_1,0);
-        	vTaskDelay(2*configTICK_RATE_HZ);        //Espera del RTOS (eficiente, no gasta CPU)
-        	                	        		   //Esta espera es de unos 2s aproximadamente.
-        }
-    }
-}
-
-//Esta tarea esta definida en el fichero command.c, es la que se encarga de procesar los comandos.
-//Aqui solo la declaramos para poderla crear en la funcion main.
-extern void vUARTTask( void *pvParameters );
+extern void PIDTask (void *pvParameters) ;
+extern void DISTTask (void *pvParameters) ;
+extern void PLANTask (void *pvParameters) ;
 
 //Aqui podria definir y/o declarar otras tareas definidas en otro fichero....
 
@@ -167,53 +141,14 @@ int main(void)
     CPUUsageInit(g_ui32SystemClock, configTICK_RATE_HZ/10, 5);
 
 
-    //
-    // Inicializa la UARTy la configura a 115.200 bps, 8-N-1 .
-    //se usa para mandar y recibir mensajes y comandos por el puerto serie
-    // Mediante un programa terminal como gtkterm, putty, cutecom, etc...
-    //
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
-    ROM_GPIOPinConfigure(GPIO_PA0_U0RX);
-    ROM_GPIOPinConfigure(GPIO_PA1_U0TX);
-    ROM_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
-
-    //Esta funcion habilita la interrupcion de la UART y le da la prioridad adecuada si esta activado el soporte para FreeRTOS
-    UARTStdioConfig(0,115200,SysCtlClockGet());
-    ROM_SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_UART0);	//La UART tiene que seguir funcionando aunque el micro esta dormido
-
     //Inicializa el puerto F (LEDs) como GPIO
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
     ROM_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3);
     ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 0);	//LEDS APAGADOS
 
-    //Inicializa la biblioteca RGB (sin configurar las salidas como RGB)
-    RGBInit(0);
-    SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_TIMER0);	//Esto es necesario para que el timer0 siga funcionando en bajo consumo
-    SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_TIMER1);  //Esto es necesario para que el timer1 siga funcionando en bajo consumo
-
-
-
-    //
-    // Crea la tarea que parpadea el LED ROJO.
-    //
-
-    if((xTaskCreate(LEDTask, (signed portCHAR *)"Led1", LED2TASKSTACKSIZE,NULL,tskIDLE_PRIORITY + 1, NULL) != pdTRUE))
-        {
-            while(1)
-            {
-            }
-        }
-
-    //
-    // Create la tarea que gestiona los comandos (definida en el fichero commands.c)
-    //
-    if((xTaskCreate(vUARTTask, (signed portCHAR *)"Uart", 512,NULL,tskIDLE_PRIORITY + 1, NULL) != pdTRUE))
-        {
-            while(1)
-            {
-            }
-        }
+    if((xTaskCreate( PLANTask, (signed portCHAR *)"Planificador", LED2TASKSTACKSIZE,NULL,tskIDLE_PRIORITY + 1, NULL) != pdTRUE)){while(1);}
+    if((xTaskCreate( PIDTask, (signed portCHAR *)"PID", LED2TASKSTACKSIZE,NULL,tskIDLE_PRIORITY + 1, NULL) != pdTRUE)){while(1);}
+    if((xTaskCreate( DISTTask, (signed portCHAR *)"Cálculo de distancia", LED2TASKSTACKSIZE,NULL,tskIDLE_PRIORITY + 1, NULL) != pdTRUE)){while(1);}
 
 
     //

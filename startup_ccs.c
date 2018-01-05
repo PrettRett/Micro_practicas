@@ -43,6 +43,7 @@ static void IntDefaultHandler(void);
 //
 //*****************************************************************************
 extern void _c_int00(void);
+extern void Enc_interrupt ();
 
 //*****************************************************************************
 //
@@ -88,7 +89,7 @@ void (* const g_pfnVectors[])(void) =
     0,                                      // Reserved
     xPortPendSVHandler,                     // The PendSV handler
     xPortSysTickHandler,                    // The SysTick handler
-    IntDefaultHandler,                      // GPIO Port A
+    Enc_interrupt,                      // GPIO Port A
     IntDefaultHandler,                      // GPIO Port B
     IntDefaultHandler,                      // GPIO Port C
     IntDefaultHandler,                      // GPIO Port D

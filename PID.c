@@ -6,6 +6,8 @@
  */
 #include "PID.h"
 
+
+
 void PIDTask(void *pvParameters)
 {
 
@@ -37,9 +39,28 @@ void Prep_Encoders()
 
     ROM_IntEnable(INT_GPIOA);
     ROM_IntMasterEnable();
+
+    //creación del grupo de eventos
+    Encods = xEventGroupCreate();
 }
 
 void Enc_interrupt ()
 {
+    int pin=GPIOIntStatus(GPIO_PORTA_BASE,GPIO_PIN_3|GPIO_PIN_2);
+
+    BaseType_t xHigherPriorityTaskWoken, xResult;
+
+    xHigherPriorityTaskWoken = pdFALSE;
+
+    /* Set bit 0 and bit 4 in xEventGroup. */
+    xResult = xEventGroupSetBitsFromISR(Encods,pin,&xHigherPriorityTaskWoken );
+
+    /* Was the message posted successfully? */
+    if( xResult != pdFAIL )
+    {
+        portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+    }
+
+    GPIOIntClear(GPIO_PORTA_BASE,GPIO_PIN_3|GPIO_PIN_2);
 
 }

@@ -20,6 +20,7 @@
 #include "driverlib/pwm.h"
 #include "driverlib/sysctl.h"
 #include "inc/hw_nvic.h"
+#include "FreeRTOS/Source/include/event_groups.h"
 
 #define PERIOD_PWM SysCtlClockGet()/64*0.02
 #define STOPCOUNT (PERIOD_PWM)/20*1.528
@@ -33,6 +34,12 @@ void PIDTask (void *pvParameters);
 void Prep_Motores();
 
 void Prep_Encoders();
+
+void Enc_interrupt();
+
+//Variables
+
+EventGroupHandle_t Encods;
 
 
 #endif /* PID_H_ */

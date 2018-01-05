@@ -86,6 +86,7 @@
 #define configGENERATE_RUN_TIME_STATS	1 // 1/0: Activa la recogida de estadísticas (relacionado con la depuración)
 #define configUSE_TICKLESS_IDLE		0  // 1/0: Desactiva la ejecución de la tarea IDLE si el sistema se suspende durante un tiempo
 									   // hasta que el sistema vuelva a reactivarse
+#define configSUPPORT_DYNAMIC_ALLOCATION    1  // 0/1: Permite el uso de EventGroups
 #define configCHECK_FOR_STACK_OVERFLOW      (2) // 0/1/2: Activa alguno de los mecanismos de chequeo de desbordamiento en pila de tareas
 
 #define configUSE_CO_ROUTINES               0 // 1/0: Activa el uso de mecanismos de corrutinas

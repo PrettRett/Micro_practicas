@@ -27,5 +27,19 @@ void Prep_Motores ()
 
 void Prep_Encoders()
 {
+    // Configuracion de puertos (servos)
+    // Habilita puerto GPIOF (servos)
+    GPIOPinTypeGPIOInput(GPIO_PORTA_BASE,GPIO_PIN_3|GPIO_PIN_2);
+    GPIOIntTypeSet(GPIO_PORTA_BASE,GPIO_PIN_3|GPIO_PIN_2,GPIO_BOTH_EDGES);
+
+    GPIOIntClear(GPIO_PORTA_BASE,GPIO_PIN_3|GPIO_PIN_2);
+    GPIOIntEnable(GPIO_PORTA_BASE,GPIO_PIN_3|GPIO_PIN_2);
+
+    ROM_IntEnable(INT_GPIOA);
+    ROM_IntMasterEnable();
+}
+
+void Enc_interrupt ()
+{
 
 }

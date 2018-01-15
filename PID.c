@@ -10,7 +10,26 @@
 
 void PIDTask(void *pvParameters)
 {
+    while(1)
+    {
+        EventBits_t flags = xEventGroupWaitBits(Encods,0x000E,
+                                                pdTRUE,pdFALSE,
+                                                portMAX_DELAY );
+        switch(flags)
+        {
+        case 0x0002:
 
+            break;
+        case 0x0004:
+            break;
+        case 0x0008:
+            break;
+        case 0x000C:
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 void Prep_Motores ()
@@ -42,17 +61,28 @@ void Prep_Encoders()
 
     //creación del grupo de eventos
     Encods = xEventGroupCreate();
+
+}
+
+void Prep_PID()
+{
+    Prep_Encoders();
+    Prep_Motores();
+    Plan_PID=xQueueCreate(1, sizeof(struct MenPID *));
+    if(Plan_PID == NULL)
+        while(1);  //queueError
 }
 
 void Enc_interrupt ()
 {
+    //enconders en PA2 y PA3
     int pin=GPIOIntStatus(GPIO_PORTA_BASE,GPIO_PIN_3|GPIO_PIN_2);
 
     BaseType_t xHigherPriorityTaskWoken, xResult;
 
     xHigherPriorityTaskWoken = pdFALSE;
 
-    /* Set bit 0 and bit 4 in xEventGroup. */
+    //activa en el eventgroups los pines que se han activado
     xResult = xEventGroupSetBitsFromISR(Encods,pin,&xHigherPriorityTaskWoken );
 
     /* Was the message posted successfully? */

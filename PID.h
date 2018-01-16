@@ -37,9 +37,20 @@ void Prep_Encoders();
 
 void Enc_interrupt();
 
+void Prep_PID();
+
+struct MenPID {
+    int dist;
+    float giro;
+} mensaje_PID;
 //Variables
 
-EventGroupHandle_t Encods;
-
+EventGroupHandle_t Encods;  //EventGroup de los encoders, también usado para avisar al PID de llegada de mensaje
+QueueHandle_t Plan_PID;     //Queue por el que se le pasan mensajes al PID de siguiente distancia y giro
+struct Pos{
+    int x;
+    int y;
+    int ang;
+}   position;
 
 #endif /* PID_H_ */

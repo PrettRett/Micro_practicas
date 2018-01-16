@@ -7,4 +7,26 @@
 
 #include "distancia.h"
 
+void DISTTask (void *pvParameters)
+{
+    
+}
 
+void SensoresContacto()
+{
+    }
+
+void SensoresLinea()
+{
+    
+}
+
+void SensoresProximidad()
+{
+
+}
+
+void CalculoDistancia()
+{
+
+}

@@ -11,5 +11,12 @@
 
 void DISTTask (void *pvParameters);
 
+void SensoresContacto();
+
+void SensoresLinea();
+
+void SensoresProximidad();
+
+
 
 #endif /* DISTANCIA_H_ */

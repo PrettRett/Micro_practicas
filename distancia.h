@@ -9,7 +9,7 @@
 #define DISTANCIA_H_
 
 
-void DISTTask (void *pvParameters);
+void DISTTask (void *pvParameters);     //tarea que controla la distancia
 
 void SensoresContacto();
 

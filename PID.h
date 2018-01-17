@@ -28,6 +28,9 @@
 #define COUNT_2MS PERIOD_PWM/10
 #define NUM_STEPS 50
 #define CYCLE_INCREMENTS (abs(COUNT_1MS-COUNT_2MS))/NUM_STEPS
+#define GET_PWM1 PWMGenPeriodGet(PWM1_BASE, PWM_OUT_6)
+#define GET_PWM2 PWMGenPeriodGet(PWM1_BASE, PWM_OUT_7)
+
 
 void PIDTask (void *pvParameters);
 
@@ -40,8 +43,9 @@ void Enc_interrupt();
 void Prep_PID();
 
 struct MenPID {
-    int dist;
+    float dist;
     float giro;
+    float speed;
 } mensaje_PID;
 //Variables
 

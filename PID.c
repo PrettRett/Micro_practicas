@@ -10,6 +10,8 @@
 
 void PIDTask(void *pvParameters)
 {
+    static float dist(0), measure(0),
+                speed(0), giro(0);
     while(1)
     {
         EventBits_t flags = xEventGroupWaitBits(Encods,0x000E,
@@ -18,9 +20,13 @@ void PIDTask(void *pvParameters)
         switch(flags)
         {
         case 0x0002:
-
+            xQueueRecieve(Plan_PID, *mensajePID, 0);
+            dist=mensajePID.dist;
+            giro=mensajePID.giro;
+            speed=mensajePID.speed;
             break;
         case 0x0004:
+
             break;
         case 0x0008:
             break;

@@ -26,8 +26,8 @@
 #define STOPCOUNT (PERIOD_PWM)/20*1.528
 #define COUNT_1MS PERIOD_PWM/20
 #define COUNT_2MS PERIOD_PWM/10
-#define NUM_STEPS 50
-#define CYCLE_INCREMENTS (abs(COUNT_1MS-COUNT_2MS))/NUM_STEPS
+#define NUM_STEPS 255
+#define CYCLE_INCREMENTS (abs(STOPCOUNT-COUNT_2MS))/NUM_STEPS
 #define GET_PWM1 PWMGenPeriodGet(PWM1_BASE, PWM_OUT_6)
 #define GET_PWM2 PWMGenPeriodGet(PWM1_BASE, PWM_OUT_7)
 
@@ -43,9 +43,9 @@ void Enc_interrupt();
 void Prep_PID();
 
 struct MenPID {
-    float dist;
-    float giro;
-    float speed;
+    short dir;                  //dirección de la velocidad 1 o -1
+    float giro;                 //de -180º a 180º
+    unsigned short speed;       //de 0 a 255
 } mensaje_PID;
 //Variables
 

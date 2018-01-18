@@ -10,8 +10,10 @@
 
 void PIDTask(void *pvParameters)
 {
-    static float dist(0), measure(0),
-                speed(0), giro(0);
+    float measure(0), giro(0);
+    int prev_measure(0)
+    short dir(0);
+    unsigned short speed(0);
     while(1)
     {
         EventBits_t flags = xEventGroupWaitBits(Encods,0x000E,
@@ -21,20 +23,33 @@ void PIDTask(void *pvParameters)
         {
         case 0x0002:
             xQueueRecieve(Plan_PID, *mensajePID, 0);
-            dist=mensajePID.dist;
+            dir=mensajePID.dir;
             giro=mensajePID.giro;
             speed=mensajePID.speed;
-            break;
-        case 0x0004:
-
-            break;
-        case 0x0008:
-            break;
-        case 0x000C:
+            if((flags&0x000C)==0)
+                break;
+        case 0x000C:    //se han activado ambos encoders a la vez
+        case 0x0004:    //se ha activado el encoder izquierdo
+            //EncIzq();
+            if ((flags&0x0008)!=0x0008)
+                break;
+        case 0x0008:    //se ha activado el encoder derecho
+            //EncDer();
             break;
         default:
             break;
         }
+        if(speed>0) //hay avance
+        {
+            //bucle PID
+            if(measure!=0 && giro>0)
+
+        }
+        else if(giro>0) //giro sin avance
+        {
+
+        }
+
     }
 }
 
@@ -64,6 +79,16 @@ void Prep_Encoders()
 
     ROM_IntEnable(INT_GPIOA);
     ROM_IntMasterEnable();
+
+    //TIMER usado para el calculo velocidad
+    SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_TIMER0);
+    // Configura el Timer0 para cuenta periodica de 32 bits (no lo separa en TIMER0A y TIMER0B)
+    TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
+    // Periodo de cuenta de 0.05s. SysCtlClockGet() te proporciona la frecuencia del reloj del sistema, por lo que una cuenta
+    // del Timer a SysCtlClockGet() tardara 1 segundo, a 0.5*SysCtlClockGet(), 0.5seg, etc...
+    // Carga la cuenta en el Timer0A
+    TimerLoadSet(TIMER0_BASE, TIMER_A, 0xFFFFFFFF);
+    TimerEnable(TIMER0_BASE, TIMER_A);
 
     //creación del grupo de eventos
     Encods = xEventGroupCreate();

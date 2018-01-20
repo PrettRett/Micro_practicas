@@ -6,7 +6,8 @@
  */
 #include "PID.h"
 
-
+// R1 o rueda 1, es considerada la rueda derecha
+// R2 o rueda 2, es considerada la rueda izquierda
 
 void PIDTask(void *pvParameters)
 {
@@ -21,6 +22,9 @@ void PIDTask(void *pvParameters)
                                                 portMAX_DELAY );
         switch(flags)
         {
+        case 0x000E:
+        case 0x0006:
+        case 0x000A:
         case 0x0002:
             xQueueRecieve(Plan_PID, *mensajePID, 0);
             dir=mensajePID.dir;
@@ -30,7 +34,13 @@ void PIDTask(void *pvParameters)
                 break;
         case 0x000C:    //se han activado ambos encoders a la vez
         case 0x0004:    //se ha activado el encoder izquierdo
-            //EncIzq();
+            if (flags&0x0004)
+            {
+                if(giro!=0)
+                {
+
+                }
+            }
             if ((flags&0x0008)!=0x0008)
                 break;
         case 0x0008:    //se ha activado el encoder derecho
@@ -39,16 +49,30 @@ void PIDTask(void *pvParameters)
         default:
             break;
         }
+        int frec1, frec2;
         if(speed>0) //hay avance
         {
+            frec1=STOPCOUNT-dir*128*CYCLE_INCREMENTS;
+            frec2=STOPCOUNT+dir*128*CYCLE_INCREMENTS;
             //bucle PID
-            if(measure!=0 && giro>0)
+            if(giro>0)
+                frec2-=dir*((giro/128)*50+60)*CYCLE_INCREMENTS;
+            else if(giro<0)
+                frec1+=dir*((giro/128)*50+60)*CYCLE_INCREMENTS;
 
         }
         else if(giro>0) //giro sin avance
         {
-
+            frec1=STOPCOUNT-dir*128*CYCLE_INCREMENTS;
+            frec2=STOPCOUNT-dir*128*CYCLE_INCREMENTS;
         }
+        else if(giro<0) //giro sin avance
+        {
+            frec1=STOPCOUNT+dir*128*CYCLE_INCREMENTS;
+            frec2=STOPCOUNT+dir*128*CYCLE_INCREMENTS;
+        }
+        PWMPulseWidthSet(PWM1_BASE, PWM_OUT_6, frec1 );
+        PWMPulseWidthSet(PWM1_BASE, PWM_OUT_7, frec2 );
 
     }
 }

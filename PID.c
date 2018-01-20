@@ -38,13 +38,31 @@ void PIDTask(void *pvParameters)
             {
                 if(giro!=0)
                 {
-
+                    if((giro<GRADOS_REC/2)&&(giro>(-1*GRADOS_REC)/2))   //se pone en caso de que el giro ha realizar sea muy pequeño, y se saldría de lo que miden los encoders
+                        giro=0;
+                    if(GET_PWM2<STOPCOUNT)
+                        giro+=GRADOS_REC;
+                    else
+                        giro-=GRADOS_REC;
+                    if((giro<GRADOS_REC/2)&&(giro>(-1*GRADOS_REC)/2))   //Comprobación de que se ha llegado lo más cerca posible del giro que se pretende hacer.
+                        giro=0;
                 }
             }
             if ((flags&0x0008)!=0x0008)
                 break;
         case 0x0008:    //se ha activado el encoder derecho
-            //EncDer();
+            if(giro!=0)
+            {
+                if((giro<GRADOS_REC/2)&&(giro>(-1*GRADOS_REC)/2))   //se pone en caso de que el giro ha realizar sea muy pequeño, y se saldría de lo que miden los encoders
+                    giro=0;
+                if(GET_PWM1>STOPCOUNT)
+                    giro+=GRADOS_REC;
+                else
+                    giro-=GRADOS_REC;
+                if((giro<GRADOS_REC/2)&&(giro>(-1*GRADOS_REC)/2))   //Comprobación de que se ha llegado lo más cerca posible del giro que se pretende hacer.
+                    giro=0;
+
+            }
             break;
         default:
             break;

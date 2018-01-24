@@ -20,7 +20,10 @@
 #include "driverlib/pwm.h"
 #include "driverlib/sysctl.h"
 #include "inc/hw_nvic.h"
-#include "FreeRTOS/Source/include/event_groups.h"
+#include "FreeRTOS.h"
+#include "event_groups.h"
+#include "queue.h"
+#include "stdlib.h"
 
 #define PERIOD_PWM SysCtlClockGet()/64*0.02
 #define STOPCOUNT (PERIOD_PWM)/20*1.528
@@ -30,6 +33,13 @@
 #define CYCLE_INCREMENTS (abs(STOPCOUNT-COUNT_2MS))/NUM_STEPS
 #define GET_PWM1 PWMGenPeriodGet(PWM1_BASE, PWM_OUT_6)
 #define GET_PWM2 PWMGenPeriodGet(PWM1_BASE, PWM_OUT_7)
+
+#define N_VUELTAS 18
+#define R_RUEDA 3.0       //centimetros
+#define D_RUEDA 9       //centimetros
+#define GRADOS_INT (360/N_VUELTAS)    //grados por cada interrupciï¿½n
+#define DIST_REC (R_RUEDA*3.14/N_VUELTAS)
+#define GRADOS_REC GRADOS_INT*R_RUEDA/D_RUEDA
 
 
 void PIDTask (void *pvParameters);
@@ -41,6 +51,14 @@ void Prep_Encoders();
 void Enc_interrupt();
 
 void Prep_PID();
+
+BaseType_t xQueueReceive(QueueHandle_t xQueue,
+                         void *pvBuffer,
+                         TickType_t xTicksToWait);
+
+BaseType_t xEventGroupSetBitsFromISR(EventGroupHandle_t xEventGroup,
+                                     const EventBits_t uxBitsToSet,
+                                     BaseType_t *pxHigherPriorityTaskWoken );
 
 struct MenPID {
     short dir;                  //dirección de la velocidad 1 o -1

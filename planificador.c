@@ -5,6 +5,9 @@
  *      Author: Alumno
  */
 
-
+void PLANTask (void *pvParameters)
+{
+    while(1);
+}
 
 

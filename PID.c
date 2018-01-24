@@ -5,16 +5,20 @@
  *      Author: Alumno
  */
 #include "PID.h"
+#include "FreeRTOS.h"
+#include "event_groups.h"
+#include "queue.h"
 
 // R1 o rueda 1, es considerada la rueda derecha
 // R2 o rueda 2, es considerada la rueda izquierda
 
 void PIDTask(void *pvParameters)
 {
-    float measure(0), giro(0);
-    int prev_measure(0)
-    short dir(0);
-    unsigned short speed(0);
+    float measure=0;
+    float giro=0;
+    int prev_measure=0;
+    short dir=0;
+    unsigned short speed=0;
     while(1)
     {
         EventBits_t flags = xEventGroupWaitBits(Encods,0x000E,
@@ -26,10 +30,10 @@ void PIDTask(void *pvParameters)
         case 0x0006:
         case 0x000A:
         case 0x0002:
-            xQueueRecieve(Plan_PID, *mensajePID, 0);
-            dir=mensajePID.dir;
-            giro=mensajePID.giro;
-            speed=mensajePID.speed;
+            xQueueRecieve(Plan_PID, &mensaje_PID, 0);
+            dir=mensaje_PID.dir;
+            giro=mensaje_PID.giro;
+            speed=mensaje_PID.speed;
             if((flags&0x000C)==0)
                 break;
         case 0x000C:    //se han activado ambos encoders a la vez
@@ -119,8 +123,8 @@ void Prep_Encoders()
     GPIOIntClear(GPIO_PORTA_BASE,GPIO_PIN_3|GPIO_PIN_2);
     GPIOIntEnable(GPIO_PORTA_BASE,GPIO_PIN_3|GPIO_PIN_2);
 
-    ROM_IntEnable(INT_GPIOA);
-    ROM_IntMasterEnable();
+    IntEnable(INT_GPIOA);
+    IntMasterEnable();
 
     //TIMER usado para el calculo velocidad
     SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_TIMER0);

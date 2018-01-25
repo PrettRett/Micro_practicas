@@ -52,15 +52,8 @@ void Enc_interrupt();
 
 void Prep_PID();
 
-BaseType_t xQueueReceive(QueueHandle_t xQueue,
-                         void *pvBuffer,
-                         TickType_t xTicksToWait);
-
-BaseType_t xEventGroupSetBitsFromISR(EventGroupHandle_t xEventGroup,
-                                     const EventBits_t uxBitsToSet,
-                                     BaseType_t *pxHigherPriorityTaskWoken );
-
-struct MenPID {
+struct MenPID
+{
     short dir;                  //dirección de la velocidad 1 o -1
     float giro;                 //de -180º a 180º
     unsigned short speed;       //de 0 a 255
@@ -69,7 +62,8 @@ struct MenPID {
 
 EventGroupHandle_t Encods;  //EventGroup de los encoders, también usado para avisar al PID de llegada de mensaje
 QueueHandle_t Plan_PID;     //Queue por el que se le pasan mensajes al PID de siguiente distancia y giro
-struct Pos{
+struct Pos
+{
     int x;
     int y;
     int ang;

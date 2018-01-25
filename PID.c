@@ -4,9 +4,10 @@
  *  Created on: 21 dic. 2017
  *      Author: Alumno
  */
-#include "PID.h"
 #include "FreeRTOS.h"
+#include "PID.h"
 #include "event_groups.h"
+#include "portmacro.h"
 #include "queue.h"
 
 // R1 o rueda 1, es considerada la rueda derecha
@@ -30,7 +31,7 @@ void PIDTask(void *pvParameters)
         case 0x0006:
         case 0x000A:
         case 0x0002:
-            xQueueRecieve(Plan_PID, &mensaje_PID, 0);
+            xQueueReceive(Plan_PID, &mensaje_PID, 0);
             dir=mensaje_PID.dir;
             giro=mensaje_PID.giro;
             speed=mensaje_PID.speed;
@@ -153,15 +154,14 @@ void Prep_PID()
 void Enc_interrupt ()
 {
     //enconders en PA2 y PA3
-    int pin=GPIOIntStatus(GPIO_PORTA_BASE,GPIO_PIN_3|GPIO_PIN_2);
+    EventBits_t pin=GPIOIntStatus(GPIO_PORTA_BASE,GPIO_PIN_3|GPIO_PIN_2);
 
     BaseType_t xHigherPriorityTaskWoken, xResult;
 
     xHigherPriorityTaskWoken = pdFALSE;
 
     //activa en el eventgroups los pines que se han activado
-    xResult = xEventGroupSetBitsFromISR(Encods,pin,&xHigherPriorityTaskWoken );
-
+     xResult = xEventGroupSetBitsFromISR(Encods,pin,&xHigherPriorityTaskWoken );
     /* Was the message posted successfully? */
     if( xResult != pdFAIL )
     {

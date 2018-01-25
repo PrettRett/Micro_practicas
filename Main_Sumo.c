@@ -33,6 +33,7 @@
 #include "semphr.h"
 #include "utils/cpu_usage.h"
 #include "PID.h"
+#include "event_groups.h"
 #include "distancia.h"
 #include "planificador.h"
 

@@ -50,7 +50,10 @@ void PIDTask(void *pvParameters)
                     else
                         giro-=GRADOS_REC;
                     if((giro<GRADOS_REC/2)&&(giro>(-1*GRADOS_REC)/2))   //Comprobación de que se ha llegado lo más cerca posible del giro que se pretende hacer.
+                    {
+                        xEventGroupSetBits(Plan,0x001);//avisamos al planificador que se ha recorrido la distancia/el giro que se quería
                         giro=0;
+                    }
                 }
             }
             if ((flags&0x0008)!=0x0008)
@@ -65,8 +68,10 @@ void PIDTask(void *pvParameters)
                 else
                     giro-=GRADOS_REC;
                 if((giro<GRADOS_REC/2)&&(giro>(-1*GRADOS_REC)/2))   //Comprobación de que se ha llegado lo más cerca posible del giro que se pretende hacer.
+                {
+                    xEventGroupSetBits(Plan,0x001);//avisamos al planificador que se ha recorrido la distancia/el giro que se quería
                     giro=0;
-
+                }
             }
             break;
         default:

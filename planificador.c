@@ -5,9 +5,16 @@
  *      Author: Alumno
  */
 
+#include "planificador.h"
+
 void PLANTask (void *pvParameters)
 {
     while(1);
 }
 
+
+void PrepPLAN()
+{
+    Plan = xEventGroupCreate();
+}
 

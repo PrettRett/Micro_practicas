@@ -141,6 +141,9 @@ int main(void)
     // (y por tanto este no se deberia utilizar para otra cosa).
     CPUUsageInit(g_ui32SystemClock, configTICK_RATE_HZ/10, 5);
 
+    Prep_PID();
+    PrepPLAN();
+
 
     //Inicializa el puerto F (LEDs) como GPIO
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);

@@ -24,6 +24,7 @@
 #include "event_groups.h"
 #include "queue.h"
 #include "stdlib.h"
+#include "planificador.h"
 
 #define PERIOD_PWM SysCtlClockGet()/64*0.02
 #define STOPCOUNT (PERIOD_PWM)/20*1.528
@@ -61,6 +62,9 @@ struct MenPID
 //Variables
 
 EventGroupHandle_t Encods;  //EventGroup de los encoders, también usado para avisar al PID de llegada de mensaje
+                            //bit 0:sin usar
+                            //bit 1:Mensaje del planificador
+                            //bit 2/3:Interrupción de cada encoder
 QueueHandle_t Plan_PID;     //Queue por el que se le pasan mensajes al PID de siguiente distancia y giro
 struct Pos
 {

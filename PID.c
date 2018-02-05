@@ -16,7 +16,7 @@
 void PIDTask(void *pvParameters)
 {
     float measure=0;
-    float giro=0;
+    double giro=0;
     int prev_measure=0;
     short dir=0;
     unsigned short speed=0;
@@ -45,7 +45,7 @@ void PIDTask(void *pvParameters)
                 {
                     if((giro<GRADOS_REC/2)&&(giro>(-1*GRADOS_REC)/2))   //se pone en caso de que el giro ha realizar sea muy pequeño, y se saldría de lo que miden los encoders
                         giro=0;
-                    if(GET_PWM2<STOPCOUNT)
+                    if(GET_PWM2>STOPCOUNT)
                         giro+=GRADOS_REC;
                     else
                         giro-=GRADOS_REC;
@@ -61,12 +61,17 @@ void PIDTask(void *pvParameters)
         case 0x0008:    //se ha activado el encoder derecho
             if(giro!=0)
             {
+                volatile int aux = GET_PWM1;
                 if((giro<GRADOS_REC/2)&&(giro>(-1*GRADOS_REC)/2))   //se pone en caso de que el giro ha realizar sea muy pequeño, y se saldría de lo que miden los encoders
                     giro=0;
                 if(GET_PWM1>STOPCOUNT)
+                {
                     giro+=GRADOS_REC;
+                }
                 else
+                {
                     giro-=GRADOS_REC;
+                }
                 if((giro<GRADOS_REC/2)&&(giro>(-1*GRADOS_REC)/2))   //Comprobación de que se ha llegado lo más cerca posible del giro que se pretende hacer.
                 {
                     xEventGroupSetBits(Plan,0x001);//avisamos al planificador que se ha recorrido la distancia/el giro que se quería
@@ -81,8 +86,8 @@ void PIDTask(void *pvParameters)
 
         if(speed>0) //hay avance
         {
-            frec1=STOPCOUNT-dir*128*CYCLE_INCREMENTS;
-            frec2=STOPCOUNT+dir*128*CYCLE_INCREMENTS;
+            frec1=STOPCOUNT-dir*speed*CYCLE_INCREMENTS;
+            frec2=STOPCOUNT+dir*speed*CYCLE_INCREMENTS;
             //bucle PID
             if(giro>0)
                 frec2-=dir*((giro/128)*50+60)*CYCLE_INCREMENTS;
@@ -92,13 +97,18 @@ void PIDTask(void *pvParameters)
         }
         else if(giro>0) //giro sin avance
         {
-            frec1=STOPCOUNT-dir*128*CYCLE_INCREMENTS;
-            frec2=STOPCOUNT-dir*128*CYCLE_INCREMENTS;
+            frec1=STOPCOUNT-128*CYCLE_INCREMENTS;
+            frec2=STOPCOUNT-128*CYCLE_INCREMENTS;
         }
         else if(giro<0) //giro sin avance
         {
-            frec1=STOPCOUNT+dir*128*CYCLE_INCREMENTS;
-            frec2=STOPCOUNT+dir*128*CYCLE_INCREMENTS;
+            frec1=STOPCOUNT+128*CYCLE_INCREMENTS;
+            frec2=STOPCOUNT+128*CYCLE_INCREMENTS;
+        }
+        else
+        {
+            frec1=STOPCOUNT;
+            frec2=STOPCOUNT;
         }
         PWMPulseWidthSet(PWM1_BASE, PWM_OUT_6, frec1 );
         PWMPulseWidthSet(PWM1_BASE, PWM_OUT_7, frec2 );
@@ -125,8 +135,7 @@ void Prep_Motores ()
 void Prep_Encoders()
 {
     // Configuracion de puertos (servos)
-    // Habilita puerto GPIOF (servos)
-    ROM_GPIODirModeSet(GPIO_PORTA_BASE, GPIO_PIN_3|GPIO_PIN_2, GPIO_DIR_MODE_IN);
+    GPIOPinTypeGPIOInput(GPIO_PORTA_BASE,GPIO_PIN_3|GPIO_PIN_2);
     GPIOIntTypeSet(GPIO_PORTA_BASE,GPIO_PIN_3|GPIO_PIN_2,GPIO_BOTH_EDGES);
 
     GPIOIntClear(GPIO_PORTA_BASE,GPIO_PIN_3|GPIO_PIN_2);
@@ -135,7 +144,7 @@ void Prep_Encoders()
     IntEnable(INT_GPIOA);
     IntMasterEnable();
 
-    /*//TIMER usado para el calculo velocidad
+    /*//TIMER usado para el calculo velocidad           //no usado
     SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_TIMER0);
     // Configura el Timer0 para cuenta periodica de 32 bits (no lo separa en TIMER0A y TIMER0B)
     TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);

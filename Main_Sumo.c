@@ -135,9 +135,13 @@ int main(void)
 
     //Habilita el clock gating de los perifericos durante el bajo consumo --> Hay que decirle los perifericos que queramos que sigan andando usando la funcion SysCtlSleepEnable(...) en cada uno de ellos
     SysCtlPeripheralClockGating(true);
+    SysCtlPWMClockSet(SYSCTL_PWMDIV_64);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM1);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+    SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_GPIOF);
+    SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_PWM1);
+    SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_GPIOA);
 
 
     // Inicializa el subsistema de medida del uso de CPU (mide el tiempo que la CPU no esta dormida)

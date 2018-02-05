@@ -30,12 +30,12 @@ void PLANTask (void *pvParameters) ;
 
 void PrepPLAN();
 
-void Msg_PID( short dir, float giro, unsigned short speed);
+void Msg_PID( short dir, double giro, unsigned short speed);
 
 struct MenPID
 {
     short dir;                  //dirección de la velocidad 1 o -1
-    float giro;                 //de -180º a 180º
+    double giro;                 //de -180º a 180º
     unsigned short speed;       //de 0 a 255
 } mensaje;
 //Variables

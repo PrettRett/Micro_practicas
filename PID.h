@@ -35,13 +35,13 @@
 #include "planificador.h"
 
 #define PERIOD_PWM SysCtlClockGet()/64*0.02
-#define STOPCOUNT (PERIOD_PWM)/20*1.528
+#define STOPCOUNT (PERIOD_PWM)/20*1.532
 #define COUNT_1MS PERIOD_PWM/20
 #define COUNT_2MS PERIOD_PWM/10
 #define NUM_STEPS 256
 #define CYCLE_INCREMENTS (abs(STOPCOUNT-COUNT_2MS))/NUM_STEPS
-#define GET_PWM1 PWMGenPeriodGet(PWM1_BASE, PWM_OUT_6)
-#define GET_PWM2 PWMGenPeriodGet(PWM1_BASE, PWM_OUT_7)
+#define GET_PWM1 PWMPulseWidthGet(PWM1_BASE, PWM_OUT_6)
+#define GET_PWM2 PWMPulseWidthGet(PWM1_BASE, PWM_OUT_7)
 
 #define N_VUELTAS 18
 #define R_RUEDA 3.0       //centimetros

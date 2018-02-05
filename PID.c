@@ -78,6 +78,7 @@ void PIDTask(void *pvParameters)
             break;
         }
         int frec1, frec2;
+
         if(speed>0) //hay avance
         {
             frec1=STOPCOUNT-dir*128*CYCLE_INCREMENTS;
@@ -107,7 +108,6 @@ void PIDTask(void *pvParameters)
 
 void Prep_Motores ()
 {
-    SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_PWM1);
     GPIOPinConfigure(GPIO_PF2_M1PWM6);
     GPIOPinConfigure(GPIO_PF3_M1PWM7);
     GPIOPinTypePWM(GPIO_PORTF_BASE, GPIO_PIN_2);
@@ -117,13 +117,16 @@ void Prep_Motores ()
     PWMGenPeriodSet(PWM1_BASE, PWM_GEN_3, PERIOD_PWM);
     PWMPulseWidthSet(PWM1_BASE, PWM_OUT_6,STOPCOUNT);
     PWMPulseWidthSet(PWM1_BASE, PWM_OUT_7,STOPCOUNT);
+    PWMOutputState(PWM1_BASE, PWM_OUT_6_BIT | PWM_OUT_7_BIT, true);
+    PWMGenEnable(PWM1_BASE, PWM_GEN_3);
+
 }
 
 void Prep_Encoders()
 {
     // Configuracion de puertos (servos)
     // Habilita puerto GPIOF (servos)
-    GPIOPinTypeGPIOInput(GPIO_PORTA_BASE,GPIO_PIN_3|GPIO_PIN_2);
+    ROM_GPIODirModeSet(GPIO_PORTA_BASE, GPIO_PIN_3|GPIO_PIN_2, GPIO_DIR_MODE_IN);
     GPIOIntTypeSet(GPIO_PORTA_BASE,GPIO_PIN_3|GPIO_PIN_2,GPIO_BOTH_EDGES);
 
     GPIOIntClear(GPIO_PORTA_BASE,GPIO_PIN_3|GPIO_PIN_2);
@@ -132,7 +135,7 @@ void Prep_Encoders()
     IntEnable(INT_GPIOA);
     IntMasterEnable();
 
-    //TIMER usado para el calculo velocidad
+    /*//TIMER usado para el calculo velocidad
     SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_TIMER0);
     // Configura el Timer0 para cuenta periodica de 32 bits (no lo separa en TIMER0A y TIMER0B)
     TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
@@ -140,7 +143,7 @@ void Prep_Encoders()
     // del Timer a SysCtlClockGet() tardara 1 segundo, a 0.5*SysCtlClockGet(), 0.5seg, etc...
     // Carga la cuenta en el Timer0A
     TimerLoadSet(TIMER0_BASE, TIMER_A, 0xFFFFFFFF);
-    TimerEnable(TIMER0_BASE, TIMER_A);
+    TimerEnable(TIMER0_BASE, TIMER_A);*/
 
     //creación del grupo de eventos
     Encods = xEventGroupCreate();
@@ -151,7 +154,7 @@ void Prep_PID()
 {
     Prep_Encoders();
     Prep_Motores();
-    Plan_PID=xQueueCreate(1, sizeof(struct MenPID *));
+    Plan_PID=xQueueCreate(1, sizeof(struct MenPID ));
     if(Plan_PID == NULL)
         while(1);  //queueError
 }

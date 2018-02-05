@@ -135,6 +135,10 @@ int main(void)
 
     //Habilita el clock gating de los perifericos durante el bajo consumo --> Hay que decirle los perifericos que queramos que sigan andando usando la funcion SysCtlSleepEnable(...) en cada uno de ellos
     SysCtlPeripheralClockGating(true);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM1);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+
 
     // Inicializa el subsistema de medida del uso de CPU (mide el tiempo que la CPU no esta dormida)
     // Para eso utiliza un timer, que aqui hemos puesto que sea el TIMER5 (ultimo parametro que se pasa a la funcion)
@@ -144,11 +148,6 @@ int main(void)
     Prep_PID();
     PrepPLAN();
 
-
-    //Inicializa el puerto F (LEDs) como GPIO
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
-    ROM_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3);
-    ROM_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 0);	//LEDS APAGADOS
 
     if((xTaskCreate( PLANTask, (signed portCHAR *)"Planificador", LED2TASKSTACKSIZE,NULL,tskIDLE_PRIORITY + 1, NULL) != pdTRUE)){while(1);}
     if((xTaskCreate( PIDTask, (signed portCHAR *)"PID", LED2TASKSTACKSIZE,NULL,tskIDLE_PRIORITY + 1, NULL) != pdTRUE)){while(1);}

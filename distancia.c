@@ -9,7 +9,10 @@
 
 void DISTTask (void *pvParameters)
 {
-    
+    while(1)
+    {
+        vTaskDelay(100);
+    }
 }
 
 void SensoresContacto()

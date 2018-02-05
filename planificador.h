@@ -24,10 +24,21 @@
 #include "event_groups.h"
 #include "queue.h"
 #include "stdlib.h"
+#include "pid.h"
 
 void PLANTask (void *pvParameters) ;
 
 void PrepPLAN();
+
+void Msg_PID( short dir, float giro, unsigned short speed);
+
+struct MenPID
+{
+    short dir;                  //dirección de la velocidad 1 o -1
+    float giro;                 //de -180º a 180º
+    unsigned short speed;       //de 0 a 255
+} mensaje;
+//Variables
 
 EventGroupHandle_t Plan;    //EventGroups que se usa para avisar al planificador de cualquier evento
 

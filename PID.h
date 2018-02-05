@@ -13,13 +13,21 @@
 #include "inc/hw_types.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
+#include "inc/hw_nvic.h"
+#include "inc/hw_gpio.h"
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/timer.h"
 #include "driverlib/pin_map.h" // Include para poder configurar el pin como salida PWM#include <stdbool.h>
 #include "driverlib/pwm.h"
+#include "driverlib/rom.h"
+#include "driverlib/rom_map.h"
+#include "driverlib/gpio.h"
 #include "driverlib/sysctl.h"
-#include "inc/hw_nvic.h"
+#include "drivers/buttons.h"
+#include "driverlib/debug.h"
+#include "driverlib/fpu.h"
+#include "driverlib/systick.h"
 #include "FreeRTOS.h"
 #include "event_groups.h"
 #include "queue.h"
@@ -53,12 +61,7 @@ void Enc_interrupt();
 
 void Prep_PID();
 
-struct MenPID
-{
-    short dir;                  //dirección de la velocidad 1 o -1
-    float giro;                 //de -180º a 180º
-    unsigned short speed;       //de 0 a 255
-} mensaje_PID;
+struct MenPID mensaje_PID;
 //Variables
 
 EventGroupHandle_t Encods;  //EventGroup de los encoders, también usado para avisar al PID de llegada de mensaje

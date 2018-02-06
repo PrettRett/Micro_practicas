@@ -17,6 +17,8 @@ void SensoresLinea();
 
 void SensoresProximidad();
 
+void SensoresContacto_interrupt ();
 
+EventGroupHandle_t Contacto_Linea;
 
 #endif /* DISTANCIA_H_ */

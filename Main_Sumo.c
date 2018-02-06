@@ -141,6 +141,10 @@ int main(void)
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC0);   // Habilita ADC0
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
+    SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_ADC0);   // Habilita ADC0
+    SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_GPIOD);
     SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_GPIOE);
     SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_GPIOB);
     SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_GPIOF);

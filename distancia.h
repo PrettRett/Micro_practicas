@@ -14,10 +14,12 @@
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_nvic.h"
+#include "inc/hw_adc.h"
 #include "inc/hw_gpio.h"
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/timer.h"
+#include "driverlib/adc.h"
 #include "driverlib/pin_map.h" // Include para poder configurar el pin como salida PWM#include <stdbool.h>
 #include "driverlib/pwm.h"
 #include "driverlib/rom.h"

@@ -51,6 +51,29 @@ void SensoresLinea()
 void SensoresProximidad()
 {
 
+    //TIMER usado para el disparo de ADC
+    SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_TIMER1);
+    // Configura el Timer0 para cuenta periodica de 32 bits (no lo separa en TIMER0A y TIMER0B)
+    TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC);
+    // Periodo de cuenta de 0.05s. SysCtlClockGet() te proporciona la frecuencia del reloj del sistema, por lo que una cuenta
+    // del Timer a SysCtlClockGet() tardara 1 segundo, a 0.5*SysCtlClockGet(), 0.5seg, etc...
+    // Carga la cuenta en el Timer0A
+    TimerLoadSet(TIMER1_BASE, TIMER_A, SysCtlClockGet()*0.1);
+    TimerEnable(TIMER1_BASE, TIMER_A);
+
+    //ADC
+    GPIOPinTypeADC(GPIO_PORTD_BASE, GPIO_PIN_0);
+    ADCSequenceDisable(ADC0_BASE, 1); // Deshabilita el secuenciador 1 del ADC0 para su configuracion
+    HWREG(ADC0_BASE + ADC_O_PC) = (ADC_PC_SR_125K); // Tasa de muestreo (max) Tambien se puede hacer con ADCClockConfigSet (elgiendo un reloj para el ADC)
+    // Disparo de muestreo por instrucciones de procesador
+    TimerControlTrigger(TIMER1_BASE, TIMER_A,1);
+    ADCSequenceConfigure(ADC0_BASE, 1, ADC_TRIGGER_TIMER, 0);
+    // Configuramos los 4 conversores del secuenciador 1 para muestreo del sensor de temperatura
+    ADCSequenceStepConfigure(ADC0_BASE, 1, 0, ADC_CTL_CH7);
+    ADCSequenceStepConfigure(ADC0_BASE, 1, 1, ADC_CTL_CH7);
+    ADCSequenceStepConfigure(ADC0_BASE, 1, 2, ADC_CTL_CH7);
+    // El conversor 4 es el ultimo, y  se genera un aviso de interrupcion
+    ADCSequenceStepConfigure(ADC0_BASE, 1, 3, ADC_CTL_CH7 | ADC_CTL_IE | ADC_CTL_END);
 }
 
 void CalculoDistancia()

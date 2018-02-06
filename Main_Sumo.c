@@ -139,6 +139,10 @@ int main(void)
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM1);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
+    SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_GPIOE);
+    SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_GPIOB);
     SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_GPIOF);
     SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_PWM1);
     SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_GPIOA);
@@ -151,6 +155,7 @@ int main(void)
 
     Prep_PID();
     PrepPLAN();
+    SensoresContacto();
 
 
     if((xTaskCreate( PLANTask, (signed portCHAR *)"Planificador", LED2TASKSTACKSIZE,NULL,tskIDLE_PRIORITY + 1, NULL) != pdTRUE)){while(1);}

@@ -35,7 +35,7 @@
 #include "planificador.h"
 
 #define PERIOD_PWM SysCtlClockGet()/64*0.02
-#define STOPCOUNT (PERIOD_PWM)/20*1.532
+#define STOPCOUNT (PERIOD_PWM)/20*1.528
 #define COUNT_1MS PERIOD_PWM/20
 #define COUNT_2MS PERIOD_PWM/10
 #define NUM_STEPS 256

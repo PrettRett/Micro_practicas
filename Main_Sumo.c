@@ -164,7 +164,7 @@ int main(void)
 
     if((xTaskCreate( PLANTask, (signed portCHAR *)"Planificador", LED2TASKSTACKSIZE,NULL,tskIDLE_PRIORITY + 1, NULL) != pdTRUE)){while(1);}
     if((xTaskCreate( PIDTask, (signed portCHAR *)"PID", LED2TASKSTACKSIZE,NULL,tskIDLE_PRIORITY + 1, NULL) != pdTRUE)){while(1);}
-    if((xTaskCreate( DISTTask, (signed portCHAR *)"Cálculo de distancia", LED2TASKSTACKSIZE,NULL,tskIDLE_PRIORITY + 1, NULL) != pdTRUE)){while(1);}
+//    if((xTaskCreate( DISTTask, (signed portCHAR *)"Cálculo de distancia", LED2TASKSTACKSIZE,NULL,tskIDLE_PRIORITY + 1, NULL) != pdTRUE)){while(1);}
 
 
     //

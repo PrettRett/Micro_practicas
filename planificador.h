@@ -41,6 +41,12 @@ struct MenPID
 //Variables
 
 EventGroupHandle_t Plan;    //EventGroups que se usa para avisar al planificador de cualquier evento
+                            //bit 1: El PID avisa que ha acabado el giro/distancia
+                            //bit 2/3/4: Se ha activado la interupcción de algún microswitch
+                            //bit 5: Aviso del ADC
+                            //bit 6/7/8: Sensores de línea
 
+QueueHandle_t Plan_PID;     //Queue usado para recibir la información del ADC
+QueueHandle_t Dist_Plan;     //Queue usado para recibir la información del ADC
 
 #endif /* PLANIFICADOR_H_ */

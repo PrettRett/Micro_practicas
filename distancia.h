@@ -37,7 +37,7 @@
 #include "planificador.h"
 
 
-void DISTTask (void *pvParameters);     //tarea que controla la distancia
+//void DISTTask (void *pvParameters);     //tarea que controla la distancia
 
 void SensoresContacto();
 
@@ -47,6 +47,10 @@ void SensoresProximidad();
 
 void SensoresContacto_interrupt ();
 
-EventGroupHandle_t Contacto, Linea;
+void SensorProximidad_interrupt ();
+
+//EventGroupHandle_t ADC;
+
+uint32_t ADCMean;
 
 #endif /* DISTANCIA_H_ */

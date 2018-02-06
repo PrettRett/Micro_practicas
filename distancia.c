@@ -7,13 +7,14 @@
 
 #include "distancia.h"
 
-void DISTTask (void *pvParameters)
+/*void DISTTask (void *pvParameters)
 {
     while(1)
     {
-        vTaskDelay(100);
+        xEventGroupWaitBits(ADC,1,pdTRUE,pdFALSE,portMAX_DELAY);
+
     }
-}
+}*/
 
 void SensoresContacto()
 {
@@ -26,7 +27,6 @@ void SensoresContacto()
     //-------------------------------------------
 
     ROM_IntEnable(INT_GPIOE);
-    ROM_IntMasterEnable();
 
     //creación del grupo de eventos
     //Contacto = xEventGroupCreate();
@@ -42,7 +42,6 @@ void SensoresLinea()
       GPIOIntEnable(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
 
       ROM_IntEnable(INT_GPIOB);
-      ROM_IntMasterEnable();
 
       //creación del grupo de eventos
       //Linea = xEventGroupCreate();
@@ -59,13 +58,10 @@ void SensoresProximidad()
     // del Timer a SysCtlClockGet() tardara 1 segundo, a 0.5*SysCtlClockGet(), 0.5seg, etc...
     // Carga la cuenta en el Timer0A
     TimerLoadSet(TIMER1_BASE, TIMER_A, SysCtlClockGet()*0.1);
-    TimerEnable(TIMER1_BASE, TIMER_A);
 
     //ADC
     GPIOPinTypeADC(GPIO_PORTD_BASE, GPIO_PIN_0);
     ADCSequenceDisable(ADC0_BASE, 1); // Deshabilita el secuenciador 1 del ADC0 para su configuracion
-    HWREG(ADC0_BASE + ADC_O_PC) = (ADC_PC_SR_125K); // Tasa de muestreo (max) Tambien se puede hacer con ADCClockConfigSet (elgiendo un reloj para el ADC)
-    // Disparo de muestreo por instrucciones de procesador
     TimerControlTrigger(TIMER1_BASE, TIMER_A,1);
     ADCSequenceConfigure(ADC0_BASE, 1, ADC_TRIGGER_TIMER, 0);
     // Configuramos los 4 conversores del secuenciador 1 para muestreo del sensor de temperatura
@@ -74,6 +70,16 @@ void SensoresProximidad()
     ADCSequenceStepConfigure(ADC0_BASE, 1, 2, ADC_CTL_CH7);
     // El conversor 4 es el ultimo, y  se genera un aviso de interrupcion
     ADCSequenceStepConfigure(ADC0_BASE, 1, 3, ADC_CTL_CH7 | ADC_CTL_IE | ADC_CTL_END);
+
+
+    ADCSequenceEnable(ADC0_BASE, 1); // Deshabilita el secuenciador 1 del ADC0 para su configuracion
+    ADCIntClear(ADC0_BASE, 1);
+    ADCIntEnable(ADC0_BASE, 1);
+    IntEnable(INT_ADC0SS1);
+    TimerEnable(TIMER1_BASE, TIMER_A);
+
+    //ADC=xEventGroupCreate();
+
 }
 
 void CalculoDistancia()
@@ -113,7 +119,7 @@ void SensoreLinea_interrupt ()
     xHigherPriorityTaskWoken = pdFALSE;
 
     //activa en el eventgroups los pines que se han activado
-    xResult = xEventGroupSetBitsFromISR(Plan,pin,&xHigherPriorityTaskWoken );
+    xResult = xEventGroupSetBitsFromISR(Plan,(pin<<5),&xHigherPriorityTaskWoken );
 
     /* Was the message posted successfully? */
     if( xResult != pdFAIL )
@@ -123,4 +129,26 @@ void SensoreLinea_interrupt ()
 
     GPIOIntClear(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
 
+}
+
+void SensorProximidad_interrupt ()
+{
+    uint32_t ADCValue[4];
+    ADCSequenceDataGet(ADC0_BASE,1,ADCValue);
+    ADCMean=(ADCValue[3]+ADCValue[2]+ADCValue[1]+ADCValue[0])/4;
+
+    BaseType_t xHigherPriorityTaskWoken, xResult;
+
+    xHigherPriorityTaskWoken = pdFALSE;
+
+    //activa en el eventgroups los pines que se han activado
+    xResult = xEventGroupSetBitsFromISR(Plan,1<<4,&xHigherPriorityTaskWoken );
+
+    /* Was the message posted successfully? */
+    if( xResult != pdFAIL )
+    {
+        portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+    }
+
+    ADCIntClear(ADC0_BASE, 1);
 }

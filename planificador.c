@@ -46,15 +46,15 @@ void PLANTask (void *pvParameters)
         switch(aux&0x0E)
           {
           case 0x002:
-              Msg_PID(1,0,100);
+              Msg_PID(1,0,100);     //delantero izquierdo
               state=1;
               break;
           case 0x004:
-              Msg_PID(-1,0,100);
+              Msg_PID(-1,0,100);    //delantero derecho
               state=2;
               break;
           case 0x008:
-              Msg_PID(1,-90.0,0);
+              Msg_PID(1,-90.0,0);   //trasero
               state=3;
               break;
           case 0x003:
@@ -78,6 +78,8 @@ void PLANTask (void *pvParameters)
 void PrepPLAN()
 {
     Plan = xEventGroupCreate();
+    Plan = xEventGroupCreate();
+    Dist_Plan=xQueueCreate(1, sizeof(uint32_t ));
 }
 
 void Msg_PID( short dir, double giro, unsigned short speed)

@@ -17,6 +17,7 @@ void PIDTask(void *pvParameters)
 {
     float measure=0;
     double giro=0;
+    double dist=0;
     int prev_measure=0;
     short dir=0;
     unsigned short speed=0;
@@ -33,6 +34,7 @@ void PIDTask(void *pvParameters)
         case 0x0002:
             xQueueReceive(Plan_PID, &mensaje_PID, 0);
             dir=mensaje_PID.dir;
+            dist=mensaje_PID.dist;
             giro=mensaje_PID.giro;
             speed=mensaje_PID.speed;
             if((flags&0x000C)==0)
@@ -47,7 +49,8 @@ void PIDTask(void *pvParameters)
 
                     if((giro<GRADOS_REC/2)&&(giro>(-1*GRADOS_REC)/2))   //Comprobación de que se ha llegado lo más cerca posible del giro que se pretende hacer.
                     {
-                        xEventGroupSetBits(Plan,0x001);//avisamos al planificador que se ha recorrido la distancia/el giro que se quería
+                        if(dist==0)
+                            xEventGroupSetBits(Plan,0x001);//avisamos al planificador que se ha recorrido la distancia/el giro que se quería
                         giro=0;
                     }
                     if(GET_PWM2>STOPCOUNT)
@@ -61,6 +64,23 @@ void PIDTask(void *pvParameters)
                         position.ang-=GRADOS_REC;
                     }
                 }
+                if(dist!=0)
+                {
+                    if((dist<=DIST_REC/2)&&(dist>=(-1*DIST_REC)/2))   //Comprobación de que se ha llegado lo más cerca posible del giro que se pretende hacer.
+                    {
+                        if(giro==0)
+                            xEventGroupSetBits(Plan,0x001);//avisamos al planificador que se ha recorrido la distancia/el giro que se quería
+                        dist=0;
+                    }
+                    if(GET_PWM2>STOPCOUNT)
+                    {
+                        dist-=DIST_REC;
+                    }
+                    else
+                    {
+                        dist+=DIST_REC;
+                    }
+                }
             }
             if ((flags&0x0008)!=0x0008)
                 break;
@@ -69,7 +89,8 @@ void PIDTask(void *pvParameters)
             {
                 if((giro<GRADOS_REC/2)&&(giro>(-1*GRADOS_REC)/2))   //Comprobación de que se ha llegado lo más cerca posible del giro que se pretende hacer.
                 {
-                    xEventGroupSetBits(Plan,0x001);//avisamos al planificador que se ha recorrido la distancia/el giro que se quería
+                    if(dist==0)
+                        xEventGroupSetBits(Plan,0x001);//avisamos al planificador que se ha recorrido la distancia/el giro que se quería
                     giro=0;
                 }
                 if(GET_PWM1>STOPCOUNT)
@@ -83,13 +104,40 @@ void PIDTask(void *pvParameters)
                     position.ang-=GRADOS_REC;
                 }
             }
+            if(dist!=0)
+            {
+                if((dist<=DIST_REC/2)&&(dist>=(-1*DIST_REC)/2))   //Comprobación de que se ha llegado lo más cerca posible del giro que se pretende hacer.
+                {
+                    if(giro==0)
+                        xEventGroupSetBits(Plan,0x001);//avisamos al planificador que se ha recorrido la distancia/el giro que se quería
+                    dist=0;
+                }
+                if(GET_PWM1<STOPCOUNT)
+                {
+                    dist-=DIST_REC;
+                }
+                else
+                {
+                    dist+=DIST_REC;
+                }
+            }
             break;
         default:
             break;
         }
         int frec1, frec2;
 
-        if(speed>0) //hay avance
+        if(dist>0)
+        {
+            frec1=STOPCOUNT-dir*100*CYCLE_INCREMENTS;
+            frec2=STOPCOUNT+dir*100*CYCLE_INCREMENTS;
+            //bucle PID
+            if(giro>0)
+                frec2-=dir*((giro/128)*50+60)*CYCLE_INCREMENTS;
+            else if(giro<0)
+                frec1+=dir*((giro/128)*50+60)*CYCLE_INCREMENTS;
+        }
+        else if(speed>0) //hay avance
         {
             frec1=STOPCOUNT-dir*speed*CYCLE_INCREMENTS;
             frec2=STOPCOUNT+dir*speed*CYCLE_INCREMENTS;

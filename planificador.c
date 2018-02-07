@@ -13,33 +13,45 @@ void PLANTask (void *pvParameters)
     while(1)
     {
         //Código de prueba de movimiento
-      /*  switch(state)
+        switch(state)
         {
         case 0:
-            Msg_PID(1,-90.0,0);
+            Msg_PID(1,0,0,10);
             state=1;
             break;
         case 1:
-            Msg_PID(1,90,0);
+            Msg_PID(1,90.0,0,0);
             state=2;
             break;
         case 2:
-            Msg_PID(1,-90.0,0);
+            Msg_PID(1,0,0,20);
             state=3;
             break;
         case 3:
-            Msg_PID(1,-90,90);
+            Msg_PID(1,90.0,0,0);
             state=4;
             break;
         case 4:
-            Msg_PID(1,180,70);
+            Msg_PID(1,0,0,10);
             state=5;
             break;
+        case 5:
+            Msg_PID(1,90.0,0,0);
+            state=6;
+            break;
+        case 6:
+            Msg_PID(1,0,0,20);
+            state=7;
+            break;
+        case 7:
+            Msg_PID(1,180.0,0,0);
+            state=8;
+            break;
         default:
-            Msg_PID(1,0,0);
+            Msg_PID(1,0,0,0);
             break;
         }
-        xEventGroupWaitBits(Plan,0x0001,pdTRUE,pdFALSE,configTICK_RATE_HZ*10 );*/
+        xEventGroupWaitBits(Plan,0x0001,pdTRUE,pdFALSE,portMAX_DELAY );
 
         //Código de prueba de microswitches
         /*static int aux=0;
@@ -72,7 +84,7 @@ void PLANTask (void *pvParameters)
           aux=xEventGroupWaitBits(Plan,0x000E,pdTRUE,pdFALSE,portMAX_DELAY);*/
 
         //Código de prueba del ADC por Trigger Timer
-        xEventGroupWaitBits(Plan,0x010,pdTRUE,pdFALSE,configTICK_RATE_HZ*10 );
+        /*xEventGroupWaitBits(Plan,0x010,pdTRUE,pdFALSE,configTICK_RATE_HZ*10 );
         if(ADCMean <= 0xC66 )//si esta mas lejos de 4cm
         {
             if(ADCMean <= 0x707)//si esta mas lejos de 8 cm
@@ -101,7 +113,7 @@ void PLANTask (void *pvParameters)
         else// si esta más cerca de 4 cm (aunque demasiado cerca empezará a creer que está en otro rango)
         {
             Msg_PID(1,0,0);
-        }
+        }*/
 
         //Código de prueba de sensores de línea
         /*static int aux=0;
@@ -133,6 +145,7 @@ void PLANTask (void *pvParameters)
                   }
                   aux=xEventGroupWaitBits(Plan,0x0E0,pdTRUE,pdFALSE,portMAX_DELAY);*/
 
+
     }
 }
 
@@ -144,9 +157,10 @@ void PrepPLAN()
     Dist_Plan=xQueueCreate(1, sizeof(uint32_t ));
 }
 
-void Msg_PID( short dir, double giro, unsigned short speed)
+void Msg_PID( short dir, double giro, unsigned short speed, double dist)
 {
     mensaje.dir=dir;
+    mensaje.dist=dist;
     mensaje.giro=giro;
     mensaje.speed=speed;
     xQueueSend(Plan_PID, &mensaje, ( TickType_t )0);

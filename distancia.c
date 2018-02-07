@@ -88,7 +88,7 @@ void SensoresProximidad()
 void PrepararSensores()
 {
     SensoresContacto();
-    SensoresLinea();
+    //SensoresLinea();
     SensoresProximidad();
 }
 

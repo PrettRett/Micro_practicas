@@ -120,8 +120,6 @@ extern void PLANTask (void *pvParameters) ;
 //*****************************************************************************
 int main(void)
 {
-
-
     //
     // Set the clocking to run at 40 MHz from the PLL.
     //
@@ -159,7 +157,9 @@ int main(void)
 
     Prep_PID();
     PrepPLAN();
-    SensoresContacto();
+    PrepararSensores();
+
+    IntMasterEnable();
 
 
     if((xTaskCreate( PLANTask, (signed portCHAR *)"Planificador", LED2TASKSTACKSIZE,NULL,tskIDLE_PRIORITY + 1, NULL) != pdTRUE)){while(1);}

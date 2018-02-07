@@ -45,6 +45,7 @@ static void IntDefaultHandler(void);
 extern void _c_int00(void);
 extern void Enc_interrupt ();
 extern void SensoresContacto_interrupt ();
+extern void SensoresLinea_interrupt ();
 extern void SensorProximidad_interrupt ();
 
 //*****************************************************************************
@@ -92,7 +93,7 @@ void (* const g_pfnVectors[])(void) =
     xPortPendSVHandler,                     // The PendSV handler
     xPortSysTickHandler,                    // The SysTick handler
     Enc_interrupt,                      // GPIO Port A
-    IntDefaultHandler,                      // GPIO Port B
+    SensoresLinea_interrupt,                      // GPIO Port B
     IntDefaultHandler,                      // GPIO Port C
     IntDefaultHandler,                      // GPIO Port D
     SensoresContacto_interrupt,                      // GPIO Port E

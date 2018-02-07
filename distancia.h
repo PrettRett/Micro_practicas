@@ -49,6 +49,8 @@ void SensoresContacto_interrupt ();
 
 void SensorProximidad_interrupt ();
 
+void PrepararSensores();
+
 //EventGroupHandle_t ADC;
 
 uint32_t ADCMean;

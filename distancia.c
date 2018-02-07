@@ -51,6 +51,7 @@ void SensoresProximidad()
 {
 
     //TIMER usado para el disparo de ADC
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
     SysCtlPeripheralSleepEnable(SYSCTL_PERIPH_TIMER1);
     // Configura el Timer0 para cuenta periodica de 32 bits (no lo separa en TIMER0A y TIMER0B)
     TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC);
@@ -72,14 +73,23 @@ void SensoresProximidad()
     ADCSequenceStepConfigure(ADC0_BASE, 1, 3, ADC_CTL_CH7 | ADC_CTL_IE | ADC_CTL_END);
 
 
-    ADCSequenceEnable(ADC0_BASE, 1); // Deshabilita el secuenciador 1 del ADC0 para su configuracion
+    ADCSequenceEnable(ADC0_BASE, 1); // habilita el secuenciador 1 del ADC0 para su configuracion
     ADCIntClear(ADC0_BASE, 1);
     ADCIntEnable(ADC0_BASE, 1);
     IntEnable(INT_ADC0SS1);
     TimerEnable(TIMER1_BASE, TIMER_A);
 
+    ADCMean=0x0;
+
     //ADC=xEventGroupCreate();
 
+}
+
+void PrepararSensores()
+{
+    SensoresContacto();
+    SensoresLinea();
+    SensoresProximidad();
 }
 
 void CalculoDistancia()
@@ -109,10 +119,10 @@ void SensoresContacto_interrupt ()
 
 }
 
-void SensoreLinea_interrupt ()
+void SensoresLinea_interrupt ()
 {
 
-    int pin=GPIOIntStatus(GPIO_PORTE_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
+    int pin=GPIOIntStatus(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
 
     BaseType_t xHigherPriorityTaskWoken, xResult;
 

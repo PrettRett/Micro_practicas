@@ -25,6 +25,7 @@
 #include "queue.h"
 #include "stdlib.h"
 #include "pid.h"
+#include "distancia.h"
 
 void PLANTask (void *pvParameters) ;
 

@@ -9,11 +9,73 @@
 
 void PLANTask (void *pvParameters)
 {
-    short state=0;
+    unsigned short state=0;     //el estado del robot:
+                                //0: estado inicial
+                                //1: enemigo encontrado
+                                //2: borde encontrado
+                                //3: post-borde (sin enemigo)
+                                //4: post-borde (con enemigo)
+                                //5: enemigo detrás
+                                //6: enemigo enfrentado
+
+    unsigned short uSwitch=0x0; //registra cada uSwitch para llevar los cambios con cada interrupción
+
+    unsigned short SLineas=0x0; //lleva el estado de los sensores de linea
+
+    unsigned short ADC_state=0; //los estados del ADC:
+                                //0: no se detecta nada (fuera de rango)
+                                //1: se detecta algo lejos
+                                //2: se detecta algo a media distancia
+                                //3: se detecta algo a distancia mínima (en cuanto nos acerquemos más volverá a estados anteriores pero seguirá estando cerca)
     while(1)
     {
-        //Código de prueba de movimiento
+        static int aux=0x00;
         switch(state)
+        {
+        case 0:
+            if(aux&0x60)                        //sensor de línea activado
+            {
+                state=2;
+                Msg_PID(-1,0,0,10);//va hacia atrás 10cm
+                //SLineas=                                          -----llevar el registro de los sensores de líneas
+                if((aux&0x08)||(uSwitch&0x04))//si microswitch trasero activo o se acaba de activar
+                {
+                    state=5;                    //nos empujan desde atrás
+                }
+            }
+            else if(aux&0x0E)                   //algún uSwitch activado
+            {
+                //SLineas=                                          -----llevar el registro de los sensores de líneas
+                if(aux&0x08)                    //uSwitch trasero activo
+                {
+                    state=5;                    //nos empujan desde atrás
+                }
+                else                            //uSwitch delantero/s activo
+                {
+                    state=6;                    //estamos enfrentados contra el enemigo
+                    Msg_PID(1,0,0,10);         //empuja adelante
+                }
+            }
+            else if(aux&0x10)                   //aviso del ADC
+            {
+
+            }
+            break;
+        case 1:
+            break;
+        case 2:
+            break;
+        case 3:
+            break;
+        case 4:
+            break;
+        case 5:
+            break;
+        case 6:
+            break;
+        }
+        //Código de prueba de movimiento
+        /*switch(state)
         {
         case 0:
             Msg_PID(1,0,0,10);
@@ -51,7 +113,7 @@ void PLANTask (void *pvParameters)
             Msg_PID(1,0,0,0);
             break;
         }
-        xEventGroupWaitBits(Plan,0x0001,pdTRUE,pdFALSE,portMAX_DELAY );
+        xEventGroupWaitBits(Plan,0x0001,pdTRUE,pdFALSE,portMAX_DELAY );*/
 
         //Código de prueba de microswitches
         /*static int aux=0;
@@ -144,15 +206,12 @@ void PLANTask (void *pvParameters)
                       break;
                   }
                   aux=xEventGroupWaitBits(Plan,0x0E0,pdTRUE,pdFALSE,portMAX_DELAY);*/
-
-
     }
 }
 
 
 void PrepPLAN()
 {
-    Plan = xEventGroupCreate();
     Plan = xEventGroupCreate();
     Dist_Plan=xQueueCreate(1, sizeof(uint32_t ));
 }
@@ -163,6 +222,6 @@ void Msg_PID( short dir, double giro, unsigned short speed, double dist)
     mensaje.dist=dist;
     mensaje.giro=giro;
     mensaje.speed=speed;
-    xQueueSend(Plan_PID, &mensaje, ( TickType_t )0);
+    xQueueOverwrite(Plan_PID, &mensaje);
     xEventGroupSetBits(Encods,0x0002);
 }

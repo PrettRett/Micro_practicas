@@ -74,11 +74,11 @@ void PIDTask(void *pvParameters)
                     }
                     if(GET_PWM2>STOPCOUNT)
                     {
-                        dist-=DIST_REC;
+                        dist-=DIST_REC/2;
                     }
                     else
                     {
-                        dist+=DIST_REC;
+                        dist+=DIST_REC/2;
                     }
                 }
             }

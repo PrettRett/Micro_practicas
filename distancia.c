@@ -7,14 +7,47 @@
 
 #include "distancia.h"
 
-/*void DISTTask (void *pvParameters)
+void DISTTask (void *pvParameters)
 {
+    short prev_value=0;
+    short nuevo_value=0;
     while(1)
     {
         xEventGroupWaitBits(ADC,1,pdTRUE,pdFALSE,portMAX_DELAY);
-
+        if(ADCMean <= 0xC66 )//si esta mas lejos de 4cm
+                {
+                    if(ADCMean <= 0x707)//si esta mas lejos de 8 cm
+                    {
+                        if(ADCMean <= 0x431)//si esta mas lejos de 14 cm
+                        {
+                            if(ADCMean > 0x20c)//si esta entre 14 y 29 cm
+                            {
+                                nuevo_value=1;
+                            }
+                            else//si esta mas lejos de 29 cm
+                            {
+                                nuevo_value=0;
+                            }
+                        }
+                        else//si esta entre 8 y 14 cm
+                        {
+                            nuevo_value=2;
+                        }
+                    }
+                    else//si esta entre 4 y 8 cm
+                    {
+                        nuevo_value=3;
+                    }
+                }
+                else// si esta más cerca de 4 cm (aunque demasiado cerca empezará a creer que está en otro rango)
+                {
+                    nuevo_value=1;
+                }
+        if(prev_value!=nuevo_value)
+            xQueueOverwrite(ADC_Plan,&nuevo_value);
+        prev_value=nuevo_value;
     }
-}*/
+}
 
 void SensoresContacto()
 {
@@ -81,7 +114,7 @@ void SensoresProximidad()
 
     ADCMean=0x0;
 
-    //ADC=xEventGroupCreate();
+    ADC=xEventGroupCreate();
 
 }
 
@@ -90,6 +123,7 @@ void PrepararSensores()
     SensoresContacto();
     //SensoresLinea();
     SensoresProximidad();
+    Plan_PID=xQueueCreate(1, sizeof(unsigned short));
 }
 
 void CalculoDistancia()

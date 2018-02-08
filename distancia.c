@@ -9,8 +9,8 @@
 
 void DISTTask (void *pvParameters)
 {
-    short prev_value=0;
-    short nuevo_value=0;
+    unsigned short prev_value=0;
+    unsigned short nuevo_value=0;
     while(1)
     {
         xEventGroupWaitBits(ADC,1,pdTRUE,pdFALSE,portMAX_DELAY);
@@ -20,7 +20,7 @@ void DISTTask (void *pvParameters)
                     {
                         if(ADCMean <= 0x431)//si esta mas lejos de 14 cm
                         {
-                            if(ADCMean > 0x20c)//si esta entre 14 y 29 cm
+                            if(ADCMean > 0x230)//si esta entre 14 y 29 cm
                             {
                                 nuevo_value=1;
                             }
@@ -44,7 +44,10 @@ void DISTTask (void *pvParameters)
                     nuevo_value=1;
                 }
         if(prev_value!=nuevo_value)
-            xQueueOverwrite(ADC_Plan,&nuevo_value);
+        {
+            xQueueSend(ADC_Plan,&nuevo_value,0);
+            xEventGroupSetBits(Plan,0x010);
+        }
         prev_value=nuevo_value;
     }
 }
@@ -123,7 +126,7 @@ void PrepararSensores()
     SensoresContacto();
     //SensoresLinea();
     SensoresProximidad();
-    Plan_PID=xQueueCreate(1, sizeof(unsigned short));
+    ADC_Plan=xQueueCreate(1, sizeof(unsigned short));
 }
 
 void CalculoDistancia()
@@ -186,7 +189,7 @@ void SensorProximidad_interrupt ()
     xHigherPriorityTaskWoken = pdFALSE;
 
     //activa en el eventgroups los pines que se han activado
-    xResult = xEventGroupSetBitsFromISR(Plan,1<<4,&xHigherPriorityTaskWoken );
+    xResult = xEventGroupSetBitsFromISR(ADC,1,&xHigherPriorityTaskWoken );
 
     /* Was the message posted successfully? */
     if( xResult != pdFAIL )

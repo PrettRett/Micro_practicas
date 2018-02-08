@@ -29,6 +29,7 @@ void PLANTask (void *pvParameters)
                                 //3: se detecta algo a distancia mínima (en cuanto nos acerquemos más volverá a estados anteriores pero seguirá estando cerca)
     while(1)
     {
+        static short seq=0;
         static int aux=0x00;
         switch(state)
         {
@@ -36,6 +37,7 @@ void PLANTask (void *pvParameters)
             if(aux&0x60)                        //sensor de línea activado
             {
                 state=2;
+                seq=0;
                 Msg_PID(-1,0,0,10);//va hacia atrás 10cm
                 //SLineas=                                          -----llevar el registro de los sensores de líneas
                 if((aux&0x08)||(uSwitch&0x04))//si microswitch trasero activo o se acaba de activar
@@ -49,16 +51,51 @@ void PLANTask (void *pvParameters)
                 if(aux&0x08)                    //uSwitch trasero activo
                 {
                     state=5;                    //nos empujan desde atrás
+                    seq=0;
                 }
                 else                            //uSwitch delantero/s activo
                 {
                     state=6;                    //estamos enfrentados contra el enemigo
+                    seq=0;
                     Msg_PID(1,0,0,10);         //empuja adelante
                 }
             }
             else if(aux&0x10)                   //aviso del ADC
             {
-
+                xQueueReceive(ADC_Plan, &ADC_state,0);
+                if(ADC_state>0)
+                {
+                    state=1;                    //cambiamos al estado enemigo encontrado
+                    seq=0;
+                    Msg_PID(1,0,10,0);
+                }
+            }
+            else if(aux&01)                     //el PID ha acabado un movimiento
+            {
+                switch(seq)
+                {
+                case 0:
+                    Msg_PID(1,45.0,0,0);    //medio giro a izquierda
+                    seq=1;
+                    break;
+                case 1:
+                    Msg_PID(1,-90.0,0,0);   //giro a derecha
+                    seq=2;
+                    break;
+                case 2:
+                    Msg_PID(1,395.0,0,0);   //damo la vuelta completa
+                    seq=3;
+                    break;
+                case 3:
+                    Msg_PID(1,0,0,50);      //avanzamos medio metro
+                    seq=0;
+                    break;
+                }
+            }
+            else
+            {
+                Msg_PID(1,45.0,0,0);
+                seq=1;
             }
             break;
         case 1:
@@ -74,6 +111,7 @@ void PLANTask (void *pvParameters)
         case 6:
             break;
         }
+        aux=xEventGroupWaitBits(Plan,0x00FF,pdTRUE,pdFALSE,configTICK_RATE_HZ*10 );
         //Código de prueba de movimiento
         /*switch(state)
         {
@@ -222,6 +260,6 @@ void Msg_PID( short dir, double giro, unsigned short speed, double dist)
     mensaje.dist=dist;
     mensaje.giro=giro;
     mensaje.speed=speed;
-    xQueueOverwrite(Plan_PID, &mensaje);
+    xQueueSend(Plan_PID, &mensaje,0);
     xEventGroupSetBits(Encods,0x0002);
 }

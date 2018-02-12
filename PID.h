@@ -45,7 +45,7 @@
 
 #define N_VUELTAS 18
 #define R_RUEDA 3.0       //centimetros
-#define D_RUEDA 9       //centimetros
+#define D_RUEDA 6       //centimetros
 #define GRADOS_INT (360/N_VUELTAS)    //grados por cada interrupci�n
 #define DIST_REC (R_RUEDA*3.14/N_VUELTAS)
 #define GRADOS_REC GRADOS_INT*R_RUEDA/D_RUEDA

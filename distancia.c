@@ -71,13 +71,14 @@ void SensoresContacto()
 void SensoresLinea()
 {
     // Configuracion de puertoB para sensores linea
-      GPIOPinTypeGPIOInput(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
-      GPIOIntTypeSet(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2,GPIO_BOTH_EDGES);
+        ROM_GPIODirModeSet(GPIO_PORTD_BASE, GPIO_PIN_1|GPIO_PIN_2, GPIO_DIR_MODE_IN);
+      GPIOPinTypeGPIOInput(GPIO_PORTD_BASE, GPIO_PIN_1|GPIO_PIN_2);
+      GPIOIntTypeSet(GPIO_PORTD_BASE, GPIO_PIN_1|GPIO_PIN_2,GPIO_BOTH_EDGES);
 
-      GPIOIntClear(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
-      GPIOIntEnable(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
+      GPIOIntClear(GPIO_PORTD_BASE, GPIO_PIN_1|GPIO_PIN_2);
+      GPIOIntEnable(GPIO_PORTD_BASE, GPIO_PIN_1|GPIO_PIN_2);
 
-      ROM_IntEnable(INT_GPIOB);
+      ROM_IntEnable(INT_GPIOD);
 
       //creación del grupo de eventos
       //Linea = xEventGroupCreate();
@@ -124,7 +125,7 @@ void SensoresProximidad()
 void PrepararSensores()
 {
     SensoresContacto();
-    //SensoresLinea();
+    SensoresLinea();
     SensoresProximidad();
     ADC_Plan=xQueueCreate(1, sizeof(unsigned short));
 }
@@ -159,14 +160,14 @@ void SensoresContacto_interrupt ()
 void SensoresLinea_interrupt ()
 {
 
-    int pin=GPIOIntStatus(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
+    int pin=GPIOIntStatus(GPIO_PORTD_BASE,GPIO_PIN_1|GPIO_PIN_2);
 
     BaseType_t xHigherPriorityTaskWoken, xResult;
 
     xHigherPriorityTaskWoken = pdFALSE;
 
     //activa en el eventgroups los pines que se han activado
-    xResult = xEventGroupSetBitsFromISR(Plan,(pin<<5),&xHigherPriorityTaskWoken );
+    xResult = xEventGroupSetBitsFromISR(Plan,(pin<<4),&xHigherPriorityTaskWoken );
 
     /* Was the message posted successfully? */
     if( xResult != pdFAIL )
@@ -174,7 +175,7 @@ void SensoresLinea_interrupt ()
         portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
     }
 
-    GPIOIntClear(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
+    GPIOIntClear(GPIO_PORTD_BASE, GPIO_PIN_1|GPIO_PIN_2);
 
 }
 

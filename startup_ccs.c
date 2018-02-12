@@ -93,9 +93,9 @@ void (* const g_pfnVectors[])(void) =
     xPortPendSVHandler,                     // The PendSV handler
     xPortSysTickHandler,                    // The SysTick handler
     Enc_interrupt,                      // GPIO Port A
-    SensoresLinea_interrupt,                      // GPIO Port B
+    IntDefaultHandler,                      // GPIO Port B
     IntDefaultHandler,                      // GPIO Port C
-    IntDefaultHandler,                      // GPIO Port D
+    SensoresLinea_interrupt,                      // GPIO Port D
     SensoresContacto_interrupt,                      // GPIO Port E
     UARTStdioIntHandler,                      // UART0 Rx and Tx
     IntDefaultHandler,                      // UART1 Rx and Tx

@@ -27,6 +27,7 @@ void PLANTask (void *pvParameters)
                                 //1: se detecta algo lejos
                                 //2: se detecta algo a media distancia
                                 //3: se detecta algo a distancia mínima (en cuanto nos acerquemos más volverá a estados anteriores pero seguirá estando cerca)
+    vTaskDelay(configTICK_RATE_HZ*5);
     while(1)
     {
         static short seq=0;
@@ -36,29 +37,50 @@ void PLANTask (void *pvParameters)
         case 0:
             if(aux&0x60)                        //sensor de línea activado
             {
-                state=2;
-                seq=0;
-                Msg_PID(-1,0,0,10);//va hacia atrás 10cm
-                SLineas=GPIOPinRead(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1);    //llevar el registro de los sensores de líneas
-                if((aux&0x08)||(uSwitch&0x04))//si microswitch trasero activo o se acaba de activar
+                SLineas=GPIOPinRead(GPIO_PORTD_BASE,GPIO_PIN_1|GPIO_PIN_2);    //llevar el registro de los sensores de líneas
+                uSwitch=GPIOPinRead(GPIO_PORTE_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
+                if(SLineas)
                 {
-                    state=5;                    //nos empujan desde atrás
-                    Msg_PID(-1,90.0,0,10);      //hacia atrás giro 90º
+                    state=2;                         //nos encontramos el borde
+                    seq=0;
+                    Msg_PID(-1,0,0,10);              //va hacia atrás 10cm
+                    if(uSwitch&0x04==0)//si encontramos la linea y nos empujan desde atras
+                    {
+                        state=5;
+                        Msg_PID(-1,90.0,0,0);      //hacia atrás 90º
+                    }
                 }
             }
             else if(aux&0x0E)                   //algún uSwitch activado
             {
-                //SLineas=                       -----llevar el registro de los sensores de líneas
-                if(aux&0x08)                    //uSwitch trasero activo
+                uSwitch=GPIOPinRead(GPIO_PORTE_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
+                if(uSwitch&0x04==0)                    //uSwitch trasero activo
                 {
                     state=5;                    //nos empujan desde atrás
                     seq=0;
                 }
                 else                            //uSwitch delantero/s activo
                 {
-                    state=6;                    //estamos enfrentados contra el enemigo
-                    seq=0;
-                    Msg_PID(1,0,0,10);         //empuja adelante
+                    state=6;
+                    if((uSwitch&0x03)==0)
+                    {
+                        Msg_PID(1,0,100,0);//empujamos
+                        seq=0;
+                    }
+                    else if((uSwitch&0x01)==0)
+                    {
+                        Msg_PID(1,180.0,60,0);
+                        seq=1;
+                    }
+                    else if((uSwitch&0x02)==0)
+                    {
+                        Msg_PID(1,-180.0,60,0);
+                        seq=0;
+                    }
+                    else//no deberia entrar
+                    {
+                        state=0;
+                    }
                 }
             }
             else if(aux&0x10)                   //aviso del ADC
@@ -68,7 +90,7 @@ void PLANTask (void *pvParameters)
                 {
                     state=1;                    //cambiamos al estado enemigo encontrado
                     seq=0;
-                    Msg_PID(1,0,10,10);
+                    Msg_PID(1,0,0,10);
                 }
             }
            else if(aux&01)                     //el PID ha acabado un movimiento
@@ -88,7 +110,7 @@ void PLANTask (void *pvParameters)
                     seq=3;
                     break;
                 case 3:
-                    Msg_PID(1,0,0,50);      //avanzamos medio metro
+                    Msg_PID(1,0,0,15);      //avanzamos medio metro
                     seq=0;
                     break;
                 }
@@ -99,118 +121,207 @@ void PLANTask (void *pvParameters)
                 seq=1;
             }
             break;
-        case 1:
+        case 1://enemigo encontrado
             if (aux&0x60)                   //sensor de línea activado
             {
-                state=2;
-                Msg_PID(-1,0,0,10);         //retrocede 10cm
-                SLineas=GPIOPinRead(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1);
-                if((aux&0x08)||(uSwitch&0x04))//si uSwitch trasero activo o se acaba de activar
+                SLineas=GPIOPinRead(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1);    //llevar el registro de los sensores de líneas
+                uSwitch=GPIOPinRead(GPIO_PORTE_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
+                if(SLineas)
                 {
-                    state=5;
-                    Msg_PID(-1,90.0,0,10);      //hacia atrás 90º
+                    state=2;                         //nos encontramos el borde
+                    Msg_PID(-1,0,0,10);              //va hacia atrás 10cm
+                    if(uSwitch&0x04==0)//si encontramos la linea y nos empujan desde atras
+                    {
+                        state=5;
+                        Msg_PID(-1,90.0,0,0);      //hacia atrás 90º
+                    }
+                }
+
+            }
+            else if (aux&0x0E)              //uSwitch delanteros detectados
+            {
+                uSwitch=GPIOPinRead(GPIO_PORTE_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
+                if((uSwitch&0x03)==0)
+                {
+                    state=6;
+                    Msg_PID(1,0,100,0);//empujamos
+                }
+                else if((uSwitch&0x01)==0)
+                {
+                    state=6;
+                    Msg_PID(1,180.0,60,0);
+                    seq=1;
+                }
+                else if((uSwitch&0x02)==0)
+                {
+                    state=6;
+                    Msg_PID(1,-180.0,60,0);
+                    seq=0;
+                }
+                else
+                {
+                    if(ADC_state>0)
+                    {
+                        state=1;
+                        Msg_PID(1,0,0,10);
+                    }
                 }
             }
-            else if (aux&0x06)              //uSwitch delanteros detectados
+            else if(aux&0x10)                   //aviso del ADC
             {
-                state=6;
-                Msg_PID(1,0,0,10);          //empuja 10cm al enemigo
+                xQueueReceive(ADC_Plan, &ADC_state,0);
+                if(ADC_state==0)
+                {
+                    state=0;                    //cambiamos al estado enemigo encontrado
+                    seq=1;
+                    Msg_PID(1,45.0,0,0);
+                }
+            }
+            else if (aux&0x01)              //PID acabado
+            {
+                Msg_PID(1,0,100,0);
             }
             break;
-        case 2:
-            if(SLineas&GPIO_PIN_1!=0)                    //se activa sensor de línea izquierdo
+        case 2://borde encontrado
+            if(aux&0x60)                        //sensor de línea activado
             {
-                Msg_PID(1,-45.0,0,10);         //gira 45 a la derecha y avanza 10 cm
-
-                if(SLineas&GPIO_PIN_0!=0)                //se activa sensor de línea derecho
+                SLineas=GPIOPinRead(GPIO_PORTD_BASE,GPIO_PIN_1|GPIO_PIN_2);
+                if((SLineas&GPIO_PIN_1)&&(SLineas&GPIO_PIN_2))
                 {
-                Msg_PID(1,45.0,0,10);         //gira 45º a la izquiera y avanza 10cm
+                    Msg_PID(-1,0,0,10);
+                }
+                else if(SLineas&GPIO_PIN_2)                    //se activa sensor de línea izquierdo
+                {
+                    Msg_PID(-1,0.0,0,10);         //gira 45 a la derecha y avanza 10 cm
+                }
+                else if(SLineas&GPIO_PIN_1)                //se activa sensor de línea derecho
+                {
+                    Msg_PID(-1,0,0,10);         //gira 45º a la izquiera y avanza 10cm
+                }
+                else
+                {
+                    uSwitch=GPIOPinRead(GPIO_PORTE_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
+                    if((uSwitch&GPIO_PIN_0==0)||(uSwitch&GPIO_PIN_1==0))
+                    {
+                        state=4;
+                        Msg_PID(1,0,0,5);
+                        seq=1;
+                    }
+                    else if(uSwitch&GPIO_PIN_2==0)
+                    {
+                        state=5;
+                        Msg_PID(-1,180.0,100,0);
+                    }
+                    else
+                    {
+                        if(ADC_state==0)
+                        {
+                            state=3;
+                            if(aux&0x020)
+                                Msg_PID(1,180.0,0,0);
+                            if(aux&0x040)
+                                Msg_PID(1,-180.0,0,0);
+                            seq=1;
+                        }
+                        else
+                        {
+                            state=4;                  //estamos enfrentados contra el enemigo
+                            Msg_PID(1,0,0,5);        //empuja adelante
+                            seq=1;
+                        }
+                    }
                 }
             }
             else if(aux&0x0E)               //algún uSwitch activado
             {
-                if(aux&0x08)                //uSwitch trasero activo
-                 {
-                  state=5;                  //nos empujan desde atrás
-                  Msg_PID(-1,90.0,0,10);      //hacia atrás 90º
+                uSwitch=GPIOPinRead(GPIO_PORTE_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
+                if(uSwitch&0x04==0)               //uSwitch trasero activo
+                {
+                    Msg_PID(-1,-180.0,0,10);      //hacia atrás 90º
+                    if(SLineas&GPIO_PIN_1)                    //se activa sensor de línea izquierdo
+                    {
+                        Msg_PID(-1,-180.0,0,10);         //gira 45 a la derecha y avanza 10 cm
+                    }
+                    else if(SLineas&GPIO_PIN_0)                //se activa sensor de línea derecho
+                    {
+                        Msg_PID(-1,180.0,0,10);         //gira 45º a la izquiera y avanza 10cm
+                    }
+                    else if((SLineas&GPIO_PIN_0)&&(SLineas&GPIO_PIN_1))
+                    {
+                        Msg_PID(-1,180.0,0,10);
+                    }
+
                  }
-                 else                       //uSwitch delantero/s activo
+                 else if((uSwitch&0x01==0)||(uSwitch&0x02==0))                    //uSwitch delantero/s activo
                  {
-                  state=6;                  //estamos enfrentados contra el enemigo
-                  Msg_PID(1,0,0,10);        //empuja adelante
+                     state=4;                  //estamos enfrentados contra el enemigo
+                     Msg_PID(1,0,0,5);        //empuja adelante
+                     seq=1;
                  }
              }
              else if(aux&0x10)                   //aviso del ADC
              {
                  xQueueReceive(ADC_Plan, &ADC_state,0);
                  if(ADC_state>0)                //si localiza al enemigo
-                  {
-                    state=1;
-                    Msg_PID(1,0,10,0);
-                  }
+                 {
+                    state=4;                  //estamos enfrentados contra el enemigo
+                    Msg_PID(1,0,0,5);        //empuja adelante
+                    seq=1;
+                 }
              }
-             else if(aux&0x10)                   //aviso del ADC
-              {
-                  xQueueReceive(ADC_Plan, &ADC_state,0);
-                  if(ADC_state>0)
-                   {
-                     state=4;                    //detecta enemigo después de salir del borde
-                     Msg_PID(1,0,0,3);
-                    }
-                  else
-                  {
-                     state=3;                    //no detecta enemigo después de salir del borde
-                     Msg_PID(-1,395.0,10,0);       //da la vuelta completa en busca del enemigo
-                  }
-                    }
-            break;
-        case 3:
-            if(aux&0x10)                   //aviso del ADC
+             else if(aux&0x01)
              {
-              xQueueReceive(ADC_Plan, &ADC_state,0);
-              if(ADC_state>0)
-              {
-               state=1;                    //cambiamos al estado enemigo encontrado
-               Msg_PID(1,0,10,10);
-              }
-              else
-              {
-               state=0;
-              }
+                 Msg_PID(-1,0,0,10);
              }
             break;
-        case 4:
+        case 3://post-borde sin enemigo
             if(aux&0x60)                        //sensor de línea activado
             {
-                state=2;
-                Msg_PID(-1,0,0,10);//va hacia atrás 10cm
-                SLineas=GPIOPinRead(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1);    //llevar el registro de los sensores de líneas
-                if((aux&0x08)||(uSwitch&0x04))//si microswitch trasero activo o se acaba de activar
+                SLineas=GPIOPinRead(GPIO_PORTD_BASE,GPIO_PIN_1|GPIO_PIN_2);    //llevar el registro de los sensores de líneas
+                uSwitch=GPIOPinRead(GPIO_PORTE_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);if(SLineas)
                 {
-                    state=5;                    //nos empujan desde atrás
-                    Msg_PID(-1,90.0,0,10);      //hacia atrás giro 90º
+                    state=2;                         //nos encontramos el borde
+                    seq=0;
+                    Msg_PID(-1,0,0,10);              //va hacia atrás 10cm
+                    if(uSwitch&0x04==0)//si encontramos la linea y nos empujan desde atras
+                    {
+                        state=5;
+                        seq=0;
+                        Msg_PID(-1,90.0,0,0);      //hacia atrás 90º
+                    }
                 }
             }
             else if(aux&0x0E)                   //algún uSwitch activado
             {
-                if(aux&0x08)                    //uSwitch trasero activo
+                uSwitch=GPIOPinRead(GPIO_PORTE_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
+                if((uSwitch&0x04==0))                    //uSwitch trasero activo
                 {
                     state=5;                    //nos empujan desde atrás
-                    Msg_PID(-1,90.0,0,10);      //hacia atrás giro 90º
+                    seq=0;
                 }
                 else                            //uSwitch delantero/s activo
                 {
                     state=6;                    //estamos enfrentados contra el enemigo
-                    Msg_PID(1,0,0,10);         //empuja adelante
+                    if((uSwitch&0x03)==0)
+                    {
+                        Msg_PID(1,0,100,0);//empujamos
+                        seq=0;
+                    }
+                    else if((uSwitch&0x01)==0)
+                    {
+                        Msg_PID(1,180.0,60,0);
+                        seq=1;
+                    }
+                    else if((uSwitch&0x02)==0)
+                    {
+                        Msg_PID(1,-180.0,60,0);
+                        seq=0;
+                    }
+                    else//no deberia de entrar aqui
+                    {
+                        state=3;
+                    }
                 }
-            }
-            break;
-        case 5:
-            if(aux&0x60)                        //sensor de línea activado
-            {
-                state=2;
-                Msg_PID(-1,0,0,10);              //va hacia atrás 10cm
-                SLineas=GPIOPinRead(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1);    //llevar el registro de los sensores de líneas
             }
             else if(aux&0x10)                   //aviso del ADC
             {
@@ -218,29 +329,209 @@ void PLANTask (void *pvParameters)
                 if(ADC_state>0)
                 {
                     state=1;                    //cambiamos al estado enemigo encontrado
-                    Msg_PID(1,0,10,10);
-                 }
-             }
+                    seq=0;
+                    Msg_PID(1,0,0,10);
+                }
+            }
+           else if(aux&01)                     //el PID ha acabado un movimiento
+            {
+                switch(seq)
+                {
+                case 0:
+                    Msg_PID(1,180.0,0,0);    //giro completo
+                    seq=1;
+                    break;
+                case 1:
+                    Msg_PID(1,0.0,0,30);   //avanzamos al centro
+                    seq=2;
+                    break;
+                case 2:
+                    Msg_PID(1,540.0,0,0);   //damos la vuelta y media
+                    seq=3;
+                    break;
+                case 3:
+                    Msg_PID(1,0,0,16);      //avanzamos medio tatami
+                    seq=4;
+                    break;
+                case 4:
+                    Msg_PID(1,90.0,0,0);      //no giramos al lateral
+                    seq=5;
+                    break;
+                case 5:
+                    Msg_PID(1,0,0,20);      //avanzamos medio metro
+                    seq=6;
+                    break;
+                case 6:
+                    Msg_PID(1,90.0,0,0);      //no giramos al lateral
+                    seq=7;
+                    break;
+                case 7:
+                    Msg_PID(1,0,0,20);      //no giramos al lateral
+                    seq=8;
+                    break;
+                case 8:
+                    Msg_PID(1,90.0,0,0);      //no giramos al lateral
+                    seq=9;
+                    break;
+                case 9:
+                    Msg_PID(1,0,0,20);      //no giramos al lateral
+                    seq=0;
+                    state=0;                 //debido a posible error de PID ya no sabemos estadisticamente donde puede estar, pasamos al estado inicial
+                    break;
 
+                }
+            }
+            else
+            {
+                Msg_PID(1,45.0,0,0);
+                seq=1;
+            }
             break;
-        case 6:
+        case 4://post-borde enemigo
             if(aux&0x60)                        //sensor de línea activado
             {
-                state=2;
-                Msg_PID(-1,0,0,3);              //va hacia atrás 3cm
+                SLineas=GPIOPinRead(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1);
+                if(seq==1)
+                {
+                    if(SLineas==0)
+                    {
+                        Msg_PID(1,0.0,0,5);    //empujamos
+                        seq=1;
+                    }
+                }
+            }
+            else if(aux&0x0E)                   //algún uSwitch activado
+            {
+                uSwitch=GPIOPinRead(GPIO_PORTE_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
+                SLineas=GPIOPinRead(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1);
+                if(uSwitch&0x04==0)                    //uSwitch trasero activo
+                {
+                    state=5;                    //nos empujan desde atrás
+                    Msg_PID(-1,180.0,0,10);      //hacia atrás giro 90º
+                }
+                else if(((uSwitch&0x02==0)||(uSwitch&0x01==0))&&(SLineas==0))                          //uSwitch delantero/s activo
+                {
+                    Msg_PID(1,0,0,10);         //empuja adelante
+                }
+            }
+            else if(aux&10)                     //el ADC nos avisa
+            {
+                xQueueReceive(ADC_Plan, &ADC_state,0);
+                if(ADC_state==0)
+                {
+                    state=0;                    //cambiamos al estado enemigo encontrado
+                    seq=0;
+                    Msg_PID(1,180.0,0,0);
+                }
+            }
+            else if(aux&01)                     //el PID ha acabado un movimiento
+            {
+                switch(seq)
+                {
+                case 0:
+                    Msg_PID(1,0.0,0,5);    //empujamos
+                    seq=1;
+                    break;
+                case 1:
+                    Msg_PID(1,0.0,0,20);   //retrocedemos
+                    seq=0;
+                    break;
+                }
+            }
+            break;
+        case 5://Nos dan por detras
+            if(aux&0x60)                        //sensor de línea activado
+            {
                 SLineas=GPIOPinRead(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1);    //llevar el registro de los sensores de líneas
+                if(SLineas)
+                {
+                    state=2;                         //nos encontramos el borde
+                    Msg_PID(-1,0,0,10);              //va hacia atrás 10cm
+                }
+            }
+            else if(aux&10)                     //el ADC nos avisa
+            {
+                xQueueReceive(ADC_Plan, &ADC_state,0);
+            }
+            else if(aux&0x0E)                   //algún uSwitch activado
+            {
+                uSwitch=GPIOPinRead(GPIO_PORTE_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
+                if(uSwitch&0x04)
+                {//hemos triunfao
+                    state=0;
+                    seq=2;
+                    Msg_PID(1,395.0,0,0);
+                }
+            }
+            else if(aux&01)                     //el PID ha acabado un movimiento
+            {
+                Msg_PID(1,180.0,0,10);
+            }
+
+            break;
+        case 6://enemigo enfrentado
+            if(aux&0x60)                        //sensor de línea activado
+            {
+                SLineas=GPIOPinRead(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1);    //llevar el registro de los sensores de líneas
+                if(SLineas)
+                {
+                    state=4;                         //nos encontramos el borde
+                    Msg_PID(1,0,0,2);              //va hacia atrás 10cm
+                }
              }
-            else if(aux&0x02)                   //uswitch izquierdo
+            else if(aux&0x0E)                   //uswitch
             {
-                Msg_PID(1,5.0,10,0);           //intenta ponerse de frente y seguir empujando
+                uSwitch=GPIOPinRead(GPIO_PORTE_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
+                if((uSwitch&0x03)==0)
+                {
+                    Msg_PID(1,0,100,0);//empujamos
+                }
+                else if((uSwitch&0x01)==0)
+                {
+                    Msg_PID(1,180.0,60,0);
+                    seq=1;
+                }
+                else if((uSwitch&0x02)==0)
+                {
+                    Msg_PID(1,-180.0,60,0);
+                    seq=0;
+                }
+                else
+                {
+                    if(ADC_state>0)
+                    {
+                        state=1;
+                        Msg_PID(1,0,0,10);
+                    }
+                    else
+                    {
+                        state=0;
+                        seq=1;
+                        Msg_PID(1,45.0,0,0);
+                    }
+                }
             }
-            else if (aux&0x04)                  //uswitch derecho
+            else if(aux&10)                     //el ADC nos avisa
             {
-                Msg_PID(1,-5.0,10,0);          //intenta ponerse de frente y seguir empujando
+                xQueueReceive(ADC_Plan, &ADC_state,0);
             }
-            else if (aux&0x06)                  //uswitch delantertos
+            else if(aux&0x0E)                   //PID
             {
-                Msg_PID(1,0,10,10);             //enemigo enfrentado sigue empujando
+                switch(seq)
+                {
+                case 0:
+                    Msg_PID(1,-20.0,100,0);    //empujamos
+                    seq=1;
+                    break;
+                case 1:
+                    Msg_PID(1,20.0,100,0);   //retrocedemos
+                    seq=0;
+                    break;
+                }
+            }
+            else
+            {
+                Msg_PID(1,0,100,0);
             }
 
             break;

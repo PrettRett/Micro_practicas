@@ -52,11 +52,11 @@ void DISTTask (void *pvParameters)
         prev_value=nuevo_value;
         if(nuevo_value==0)
         {
-            valor_h=0x230;
+            valor_h=0x235;
         }
         else if(nuevo_value>0)
         {
-            valor_h=0x215;
+            valor_h=0x211;
         }
     }
 }

@@ -43,12 +43,12 @@
 #define GET_PWM1 PWMPulseWidthGet(PWM1_BASE, PWM_OUT_6)
 #define GET_PWM2 PWMPulseWidthGet(PWM1_BASE, PWM_OUT_7)
 
-#define N_VUELTAS 18
+#define N_VUELTAS 18.0
 #define R_RUEDA 3.0       //centimetros
-#define D_RUEDA 6       //centimetros
-#define GRADOS_INT (360/N_VUELTAS)    //grados por cada interrupciï¿½n
+#define D_RUEDA 8.0       //centimetros
+#define GRADOS_INT 360.0/18.0
 #define DIST_REC (R_RUEDA*3.14/N_VUELTAS)
-#define GRADOS_REC GRADOS_INT*R_RUEDA/D_RUEDA
+#define GRADOS_REC (R_RUEDA/D_RUEDA)*GRADOS_INT
 
 
 void PIDTask (void *pvParameters);
@@ -69,11 +69,5 @@ EventGroupHandle_t Encods;  //EventGroup de los encoders, también usado para avi
                             //bit 1:Mensaje del planificador
                             //bit 2/3:Interrupción de cada encoder
 QueueHandle_t Plan_PID;     //Queue por el que se le pasan mensajes al PID de siguiente distancia y giro
-struct Pos
-{
-    int x;
-    int y;
-    int ang;
-}   position;
 
 #endif /* PID_H_ */

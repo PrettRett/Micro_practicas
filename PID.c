@@ -46,27 +46,24 @@ void PIDTask(void *pvParameters)
 
                 if(giro!=0)
                 {
-
-                    if((giro<GRADOS_REC/2)&&(giro>(-1*GRADOS_REC)/2))   //Comprobación de que se ha llegado lo más cerca posible del giro que se pretende hacer.
+                    if(GET_PWM2>STOPCOUNT)
+                    {
+                        giro+=GRADOS_REC;
+                    }
+                    else
+                    {
+                        giro-=GRADOS_REC;
+                    }
+                    if((giro<=GRADOS_REC/2)&&(giro>=(-1*GRADOS_REC)/2))   //Comprobación de que se ha llegado lo más cerca posible del giro que se pretende hacer.
                     {
                         if(dist==0)
                             xEventGroupSetBits(Plan,0x001);//avisamos al planificador que se ha recorrido la distancia/el giro que se quería
                         giro=0;
                     }
-                    if(GET_PWM2>STOPCOUNT)
-                    {
-                        giro+=GRADOS_REC;
-                        position.ang+=GRADOS_REC;
-                    }
-                    else
-                    {
-                        giro-=GRADOS_REC;
-                        position.ang-=GRADOS_REC;
-                    }
                 }
                 if(dist!=0)
                 {
-                    if((dist<=DIST_REC)&&(dist>=(-1*DIST_REC)))   //Comprobación de que se ha llegado lo más cerca posible del giro que se pretende hacer.
+                    if(dist<=DIST_REC)   //Comprobación de que se ha llegado lo más cerca posible del giro que se pretende hacer.
                     {
                         if(giro==0)
                             xEventGroupSetBits(Plan,0x001);//avisamos al planificador que se ha recorrido la distancia/el giro que se quería
@@ -80,26 +77,24 @@ void PIDTask(void *pvParameters)
         case 0x0008:    //se ha activado el encoder derecho
             if(giro!=0)
             {
-                if((giro<GRADOS_REC)&&(giro>(-1*GRADOS_REC)))   //Comprobación de que se ha llegado lo más cerca posible del giro que se pretende hacer.
+                if(GET_PWM1>STOPCOUNT)
+                {
+                    giro+=GRADOS_REC;
+                }
+                else
+                {
+                    giro-=GRADOS_REC;
+                }
+                if((giro<=GRADOS_REC/2)&&(giro>=(-1*GRADOS_REC/2)))   //Comprobación de que se ha llegado lo más cerca posible del giro que se pretende hacer.
                 {
                     if(dist==0)
                         xEventGroupSetBits(Plan,0x001);//avisamos al planificador que se ha recorrido la distancia/el giro que se quería
                     giro=0;
                 }
-                if(GET_PWM1>STOPCOUNT)
-                {
-                    giro+=GRADOS_REC;
-                    position.ang+=GRADOS_REC;
-                }
-                else
-                {
-                    giro-=GRADOS_REC;
-                    position.ang-=GRADOS_REC;
-                }
             }
             if(dist!=0)
             {
-                if((dist<=DIST_REC)&&(dist>=(-1*DIST_REC)))   //Comprobación de que se ha llegado lo más cerca posible del giro que se pretende hacer.
+                if(dist<=DIST_REC)   //Comprobación de que se ha llegado lo más cerca posible del giro que se pretende hacer.
                 {
                     if(giro==0)
                         xEventGroupSetBits(Plan,0x001);//avisamos al planificador que se ha recorrido la distancia/el giro que se quería
@@ -119,9 +114,9 @@ void PIDTask(void *pvParameters)
             frec2=STOPCOUNT+dir*100*CYCLE_INCREMENTS;
             //bucle PID
             if(giro>0)
-                frec2-=dir*((giro/128)*50)*CYCLE_INCREMENTS;
+                frec2-=dir*((giro/80)*50)*CYCLE_INCREMENTS;
             else if(giro<0)
-                frec1-=dir*((giro/128)*50)*CYCLE_INCREMENTS;
+                frec1-=dir*((giro/80)*50)*CYCLE_INCREMENTS;
         }
         else if(speed>0) //hay avance
         {
@@ -129,9 +124,9 @@ void PIDTask(void *pvParameters)
             frec2=STOPCOUNT+dir*speed*CYCLE_INCREMENTS;
             //bucle PID
             if(giro>0)
-                frec2-=dir*((giro/128)*50)*CYCLE_INCREMENTS;
+                frec2-=dir*((giro/80)*50)*CYCLE_INCREMENTS;
             else if(giro<0)
-                frec1-=dir*((giro/128)*50)*CYCLE_INCREMENTS;
+                frec1-=dir*((giro/80)*50)*CYCLE_INCREMENTS;
 
         }
         else if(giro>0) //giro sin avance

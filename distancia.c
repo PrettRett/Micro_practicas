@@ -11,6 +11,7 @@ void DISTTask (void *pvParameters)
 {
     unsigned short prev_value=0;
     unsigned short nuevo_value=0;
+    int valor_h=0x230;
     while(1)
     {
         xEventGroupWaitBits(ADC,1,pdTRUE,pdFALSE,portMAX_DELAY);
@@ -20,7 +21,7 @@ void DISTTask (void *pvParameters)
                     {
                         if(ADCMean <= 0x431)//si esta mas lejos de 14 cm
                         {
-                            if(ADCMean > 0x230)//si esta entre 14 y 29 cm
+                            if(ADCMean > valor_h)//si esta entre 14 y 29 cm
                             {
                                 nuevo_value=1;
                             }
@@ -49,6 +50,14 @@ void DISTTask (void *pvParameters)
             xEventGroupSetBits(Plan,0x010);
         }
         prev_value=nuevo_value;
+        if(nuevo_value==0)
+        {
+            valor_h=0x230;
+        }
+        else if(nuevo_value>0)
+        {
+            valor_h=0x215;
+        }
     }
 }
 

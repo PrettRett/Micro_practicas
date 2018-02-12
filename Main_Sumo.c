@@ -40,7 +40,7 @@
 #define LED1TASKPRIO 1
 #define LED2TASKPRIO 1
 #define LED1TASKSTACKSIZE 128
-#define LED2TASKSTACKSIZE 512
+#define LED2TASKSTACKSIZE 1024
 
 //Globales
 uint32_t g_ui32CPUUsage;
@@ -163,7 +163,7 @@ int main(void)
     IntMasterEnable();
 
 
-    if((xTaskCreate( PLANTask, (signed portCHAR *)"Planificador", LED2TASKSTACKSIZE,NULL,tskIDLE_PRIORITY + 1, NULL) != pdTRUE)){while(1);}
+    if((xTaskCreate( PLANTask, (signed portCHAR *)"Planificador", LED2TASKSTACKSIZE,NULL,tskIDLE_PRIORITY + 2, NULL) != pdTRUE)){while(1);}
     if((xTaskCreate( PIDTask, (signed portCHAR *)"PID", LED1TASKSTACKSIZE,NULL,tskIDLE_PRIORITY + 1, NULL) != pdTRUE)){while(1);}
     if((xTaskCreate( DISTTask, (signed portCHAR *)"Cálculo de distancia", LED1TASKSTACKSIZE,NULL,tskIDLE_PRIORITY + 1, NULL) != pdTRUE)){while(1);}
 

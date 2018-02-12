@@ -177,7 +177,7 @@ void PLANTask (void *pvParameters)
               {
                state=0;
               }
-              }
+             }
             break;
         case 4:
             if(aux&0x60)                        //sensor de línea activado
